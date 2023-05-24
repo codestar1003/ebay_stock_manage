@@ -1,0 +1,11 @@
+Django==4.2.1
+Pillow==9.5.0
+requests==2.30.0
+django-cors-headers==4.0.0
+djangorestframework==3.14.0
+django-environ==0.10.0
+django-allauth==0.54.0
+psycopg2==2.9.6
+dry-rest-permissions==0.1.10
+translators==5.7.6
+beautifulsoup4==4.12.2
