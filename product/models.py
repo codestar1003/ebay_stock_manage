@@ -9,7 +9,7 @@ from utils.models import TimeStampModel
 class Product(TimeStampModel):
     class Condition(models.TextChoices):
         NEW = 1000
-        USED = 500
+        USED = 3000
 
     class Country(models.TextChoices):
         JAPAN = 'JP'
