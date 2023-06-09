@@ -11,12 +11,16 @@ class ScrapingEngine:
         )
         dom = bs(resp.content, 'html.parser')
         data = {}
-        data['title'] = convert_text(dom.find('div', attrs={'itemprop': 'name'}).text)
+        data['title_jp'] = convert_text(dom.find('div', attrs={'itemprop': 'name'}).text)
         data['price'] = int(dom.find('span', attrs={'itemprop': 'price'})['content'])
-        data['description'] = [convert_text(dom.find('div', attrs={'itemprop': 'description'}).text)]
+        data['description_jp'] = [convert_text(dom.find('div', attrs={'itemprop': 'description'}).text)]
         data['photos'] = []
         photos = dom.find('div', attrs={'id': 'goodsImages'}).find('div', attrs={'id': 'sliderWrap'}).find('ul', attrs={'id': 'sliderThumbnail'}).find_all('img')
         for photo in photos:
-            data['photos'].append(photo['src'])
+            data['photos'].append(
+                {
+                    'url': photo['src']
+                }
+            )
 
         return data

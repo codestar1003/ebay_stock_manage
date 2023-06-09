@@ -21,12 +21,16 @@ class ScrapingEngine:
         )
         dom = bs(resp.content, "html.parser")
         data = {}
-        data['title'] = convert_text(dom.find('h1', attrs={'id': 'products_maintitle'}).span.text)
+        data['title_jp'] = convert_text(dom.find('h1', attrs={'id': 'products_maintitle'}).span.text)
         data['price'] = int(dom.find('span', attrs={'id': 'js_scl_unitPrice'}).text[1:].replace(',', ''))
-        data['description'] = [convert_text(dom.find('div', attrs={'id': 'pinfo_productSummury'}).contents[0].text)]
+        data['description_jp'] = [convert_text(dom.find('div', attrs={'id': 'pinfo_productSummury'}).contents[0].text)]
         data['photos'] = []
         photos = dom.find('div', attrs={'id': 'pImgThumbList'}).ul.find_all('li')
         for photo in photos:
-            data['photos'].append(photo.div.a.find('input', attrs={'class': 'largeUrl'})['value'])
+            data['photos'].append(
+                {
+                    'url': photo.div.a.find('input', attrs={'class': 'largeUrl'})['value']
+                }
+            )
         
         return data

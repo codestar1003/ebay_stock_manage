@@ -20,8 +20,14 @@ class ScrapingEngine:
         )
         object = json.loads(resp.text)
         data = {}
-        data['title'] = convert_text(object['data']['name'])
+        data['title_jp'] = convert_text(object['data']['name'])
         data['price'] = object['data']['price']
-        data['description'] = [convert_text(object['data']['description'])]
-        data['photos'] = object['data']['photos']
+        data['description_jp'] = [convert_text(object['data']['description'])]
+        data['photos'] = []
+        for photo in object['data']['photo']:
+            data['photos'].append(
+                {
+                    'url': photo
+                }
+            )
         return data

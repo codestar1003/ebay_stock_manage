@@ -22,18 +22,22 @@ class ScrapingEngine:
         dom = bs(resp.content, 'html.parser')
         item_detail = dom.find('div', attrs={'id': 'dp-container'})
         data = {}
-        data['title'] = item_detail.find('span', attrs={'id': 'productTitle'}).text
+        data['title_jp'] = item_detail.find('span', attrs={'id': 'productTitle'}).text
         data['price'] = int(item_detail.find('span', attrs={'id': 'color_name_2_price'}).span.text.split('¥')[-1].replace(',', ''))
-        data['description'] = []
+        data['description_jp'] = []
         descriptions = item_detail.find('div', attrs={'id': 'feature-bullets'}).ul.find_all('span', attrs={'class': 'a-list-item'})
         for description in descriptions:
-            data['description'].append(description.text)
+            data['description_jp'].append(description.text)
         
         pattern = r'"hiRes":"https://m.media-amazon.com.*?.jpg'
         matches = re.findall(pattern, item_detail.find('div', attrs={'id': 'imageBlock_feature_div'}).find_all('script')[2].text)
         data['photos'] = []
         for item in matches:
             url = item.split('"')[-1]
-            data['photos'].append(url)
+            data['photos'].append(
+                {
+                    'url': url
+                }
+            )
 
         return data

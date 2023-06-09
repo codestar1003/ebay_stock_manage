@@ -11,9 +11,9 @@ class ScrapingEngine:
         )
         item_detail = bs(resp.content, "html.parser").find('div', attrs={'class': 'product-detail'})
         data = {}
-        data['title'] = item_detail.find('div', attrs={'class': 'product-detail-name'}).h1.text
+        data['title_jp'] = item_detail.find('div', attrs={'class': 'product-detail-name'}).h1.text
         data['price'] = int(item_detail.find('span', attrs={'class': 'product-detail-price__main'}).text.replace(',', ''))
-        data['description'] = []
+        data['description_jp'] = []
         table= item_detail.find('div', attrs={'id': 'panel1'}).table.contents
         for row in table:
             if hasattr(row, 'contents'):
@@ -22,11 +22,15 @@ class ScrapingEngine:
                 elif(len(row.contents) == 5):
                     description = convert_text(row.contents[1].text + ': ' + row.contents[3].text)
                 
-                data['description'].append(description)
+                data['description_jp'].append(description)
 
         data['photos'] = []
         photos = item_detail.find('div', attrs={'class': 'product-detail-images-main'}).find_all('img')
         for photo in photos:
-            data['photos'].append(photo['src'])
+            data['photos'].append(
+                {
+                    'url': photo['src']
+                }
+            )
         
         return data
