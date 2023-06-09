@@ -163,3 +163,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+#Server
+SERVER_URL= env('SERVER_URL')
+
+#eBay
+APP_ID = env('APP_ID')
+DEV_ID = env('DEV_ID')
+CERT_ID = env('CERT_ID')
+TOKEN = env('Token')
