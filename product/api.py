@@ -198,6 +198,10 @@ class ProductViewSet(ModelViewSet):
                 'ReturnPolicy': RETURN_POLICY[request.data['return_policy']],
                 'ShippingDetails': SHIPPING_POLICY[request.data['shipping_policy']],
                 'DispatchTimeMax': DISPATCHTIMEMAX[request.data['shipping_policy']],
+                'PrivateListing': request.data['private_listing'],
+                'BestOfferDetails': {
+                    'BestOfferEnabled': request.data['best_offer']
+                }
             }
         }
         response = api.execute('AddItem', item)
