@@ -173,7 +173,10 @@ class ProductViewSet(ModelViewSet):
                 'Name': type,
                 'Value': request.data['item_specific_value'][index]
             })
-
+        with open(str(settings.BASE_DIR / 'product/descriptiontemplate/template1.txt')) as f:
+            desc =f.read()
+        content = productdescription.description_en.replace('\n', '<br/>')
+        desc = desc.replace('<%DESC>', content)
         item = {
             'Item': {
                 'Title': product.title_en,
@@ -181,9 +184,9 @@ class ProductViewSet(ModelViewSet):
                 'Location': product.location_city,
                 'ConditionID': product.condition,
                 'AutoPay': 'True',
-                # 'PrimaryCategory': {'CategoryID': request.data['item_category']},
-                'PrimaryCategory': {'CategoryID': '33963'},
-                'Description': '<div vocab="http://schema.org/" typeof="Product">My description</div>',
+                'PrimaryCategory': {'CategoryID': request.data['item_category']},
+                # 'PrimaryCategory': {'CategoryID': '33963'},
+                'Description': desc,
                 'ListingDuration': 'GTC',
                 'ListingType': 'FixedPriceItem',
                 'StartPrice': product.price,
