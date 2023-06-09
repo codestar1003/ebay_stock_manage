@@ -8,11 +8,11 @@ from utils.models import TimeStampModel
 
 class Product(TimeStampModel):
     class Condition(models.TextChoices):
-        NEW = 'NEW'
-        USED = 'USED'
+        NEW = 1000
+        USED = 500
 
     class Country(models.TextChoices):
-        JAPAN = 'JAPAN'
+        JAPAN = 'JP'
 
     url = models.URLField(_('url'), null=True, blank=True)
     title_jp = models.CharField(_('title JP'), max_length=255, null=True, blank=True)
@@ -54,11 +54,11 @@ class Product(TimeStampModel):
         blank=True
     )
 
-    # @authenticated_users
+    @authenticated_users
     def has_read_permission(request):
         return True
 
-    # @authenticated_users
+    @authenticated_users
     def has_write_permission(request):
         return True
 
@@ -92,6 +92,14 @@ class ProductPhoto(TimeStampModel):
         null=True,
         blank=True
     )
+
+    @authenticated_users
+    def has_read_permission(request):
+        return True
+
+    @authenticated_users
+    def has_write_permission(request):
+        return True
 
 
 class ProductDescription(TimeStampModel):
