@@ -10,3 +10,4 @@ dry-rest-permissions==0.1.10
 translators==5.7.6
 beautifulsoup4==4.12.2
 ebaysdk==2.2.0
+selenium==4.10.0
