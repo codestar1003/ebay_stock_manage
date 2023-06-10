@@ -23,18 +23,19 @@ class ScrapingEngine:
         # )
         options = webdriver.ChromeOptions() 
         options.headless = True
-        with webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options) as driver:
+        with webdriver.Chrome(service=ChromeService(ChromeDriverManager().install())) as driver:
             driver.get(source_url)
             dom = bs(driver.page_source, "html.parser")
             data = {}
             data['title_jp'] = convert_text(dom.find('span', attrs={'class': 'normal_reserve_item_name'}).b.text)
             data['price'] = int(dom.find('div', attrs={'id': 'priceCalculationConfig'})['data-price'])
             data['description_jp'] = []
-            descriptions = dom.find('span', attrs={'class': 'item_desc'}) 
-            for description in descriptions:
-                description = convert_text(description.text)
-                if(description):
-                    data['description_jp'].append(description)
+            descriptions = dom.find('span', attrs={'class': 'item_desc'})
+            if descriptions:
+                for description in descriptions:
+                    description = convert_text(description.text)
+                    if(description):
+                        data['description_jp'].append(description)
             data['photos'] = []
             photos = dom.find_all('meta', attrs={'itemprop': 'image'})
             for photo in photos:
