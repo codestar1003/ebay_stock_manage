@@ -2,8 +2,8 @@ import requests
 import translators as ts
 import uuid
 
-from urllib.request import urlopen
 from django.conf import settings
+from io import BytesIO
 from PIL import Image
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -34,8 +34,8 @@ class ProductViewSet(ModelViewSet):
             
             # Photo
             for photo in data['photos']:
-                response = urlopen(photo['url'])
-                image = Image.open(response)
+                response = requests.get(photo['url'])
+                image = Image.open(BytesIO(response.content))
                 photo['width'] = image.width
                 photo['height'] = image.height
 
