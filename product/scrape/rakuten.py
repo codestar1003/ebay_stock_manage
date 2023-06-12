@@ -9,14 +9,11 @@ class ScrapingEngine:
     def scrape_data(self, source_url):
         options = webdriver.ChromeOptions() 
         options.headless = True
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome()
         driver.get(source_url)
-        loaded = None
         data = {}
-        while loaded is None:
-            dom = bs(driver.page_source, "html.parser")
-            loaded = dom.find('span', attrs={'class': 'normal_reserve_item_name'})
-            time.sleep(2)
+        time.sleep(10)
+        dom = bs(driver.page_source, "html.parser")
 
         data['title_jp'] = convert_text(dom.find('span', attrs={'class': 'normal_reserve_item_name'}).b.text)
         data['price'] = int(dom.find('div', attrs={'id': 'priceCalculationConfig'})['data-price'])
