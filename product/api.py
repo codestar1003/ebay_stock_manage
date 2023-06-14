@@ -51,11 +51,8 @@ class ProductViewSet(ModelViewSet):
                     data=data,
                     status=200
                 )
-            except Exception:
-                return Response(
-                    data='操作が失敗しました。もう一度お試しください。',
-                    status=400
-                )
+            except Exception as err:
+                raise err
         
         return Response(
             data='入力したサイトへのサービスはまだサポートされていません。',
@@ -67,11 +64,8 @@ class ProductViewSet(ModelViewSet):
         text = request.data['text']
         try: 
             text_en = ts.translate_text(query_text=text, from_language='ja', to_language='en')
-        except Exception:
-            return Response(
-                data='操作が失敗しました。もう一度お試しください。',
-                status=400
-            )
+        except Exception as err:
+            raise err
         else:
             return Response(
                 data=text_en,
@@ -168,59 +162,62 @@ class ProductViewSet(ModelViewSet):
         )
         productdescription.save()
 
-        # Set up the API connection
-        api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
-        
-        # Authenticate and get a sesstion token
-        # response = api.execute('GetSessionID', {})
-        # session_id = response.reply.SessionID
+        try:
+            # Set up the API connection
+            api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
+            
+            # Authenticate and get a sesstion token
+            # response = api.execute('GetSessionID', {})
+            # session_id = response.reply.SessionID
 
-        # Create a listing for the item
-        namevaluelist = []
-        for index, type in enumerate(request.data['item_specific_type']):
-            namevaluelist.append({
-                'Name': type,
-                'Value': request.data['item_specific_value'][index]
-            })
-        with open(str(settings.BASE_DIR / 'product/descriptiontemplate/template1.txt')) as f:
-            desc =f.read()
-        content = productdescription.description_en.replace('\n', '<br/>')
-        desc = desc.replace('<%DESC>', content)
-        item = {
-            'Item': {
-                'Title': product.title_en,
-                'Country': product.location_country,
-                'Location': product.location_city,
-                'ConditionID': product.condition,
-                'AutoPay': 'True',
-                'PrimaryCategory': {'CategoryID': request.data['item_category']},
-                # 'PrimaryCategory': {'CategoryID': '33963'},
-                'Description': desc,
-                'ListingDuration': 'GTC',
-                'ListingType': 'FixedPriceItem',
-                'StartPrice': product.price,
-                'Currency': 'USD',
-                'Quantity': product.quantity,
-                'PictureDetails': {
-                    'PictureURL': [f"{settings.SERVER_URL}{ProductPhotoSerializer(productphoto).data['path']}" for productphoto in product.productphoto_set.all()]  # Add at least one photo URL
-                },
-                'ItemSpecifics': {
-                    'NameValueList': namevaluelist
-                },
-                'ReturnPolicy': RETURN_POLICY[request.data['return_policy']],
-                'ShippingDetails': SHIPPING_POLICY[request.data['shipping_policy']],
-                'DispatchTimeMax': DISPATCHTIMEMAX[request.data['shipping_policy']],
-                'PrivateListing': request.data['private_listing'],
-                'BestOfferDetails': {
-                    'BestOfferEnabled': request.data['best_offer']
+            # Create a listing for the item
+            namevaluelist = []
+            for index, type in enumerate(request.data['item_specific_type']):
+                namevaluelist.append({
+                    'Name': type,
+                    'Value': request.data['item_specific_value'][index]
+                })
+            with open(str(settings.BASE_DIR / 'product/descriptiontemplate/template1.txt')) as f:
+                desc =f.read()
+            content = productdescription.description_en.replace('\n', '<br/>')
+            desc = desc.replace('<%DESC>', content)
+            item = {
+                'Item': {
+                    'Title': product.title_en,
+                    'Country': product.location_country,
+                    'Location': product.location_city,
+                    'ConditionID': product.condition,
+                    'AutoPay': 'True',
+                    'PrimaryCategory': {'CategoryID': request.data['item_category']},
+                    # 'PrimaryCategory': {'CategoryID': '33963'},
+                    'Description': desc,
+                    'ListingDuration': 'GTC',
+                    'ListingType': 'FixedPriceItem',
+                    'StartPrice': product.price,
+                    'Currency': 'USD',
+                    'Quantity': product.quantity,
+                    'PictureDetails': {
+                        'PictureURL': [f"{settings.SERVER_URL}{ProductPhotoSerializer(productphoto).data['path']}" for productphoto in product.productphoto_set.all()]  # Add at least one photo URL
+                    },
+                    'ItemSpecifics': {
+                        'NameValueList': namevaluelist
+                    },
+                    'ReturnPolicy': RETURN_POLICY[request.data['return_policy']],
+                    'ShippingDetails': SHIPPING_POLICY[request.data['shipping_policy']],
+                    'DispatchTimeMax': DISPATCHTIMEMAX[request.data['shipping_policy']],
+                    'PrivateListing': request.data['private_listing'],
+                    'BestOfferDetails': {
+                        'BestOfferEnabled': request.data['best_offer']
+                    }
                 }
             }
-        }
-        response = api.execute('AddItem', item)
-        return Response(
-            data='Success',
-            status=200
-        )
+            api.execute('AddItem', item)
+            return Response(
+                data='Success',
+                status=200
+            )
+        except Exception as err:
+            raise err
 
 
 class ProductPhotoViewSet(ModelViewSet):
