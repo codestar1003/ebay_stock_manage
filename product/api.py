@@ -52,7 +52,10 @@ class ProductViewSet(ModelViewSet):
                     status=200
                 )
             except Exception:
-                raise ValueError('入力したサイトへのサービスはまだサポートされていません。')
+                return Response(
+                    data='操作が失敗しました。もう一度お試しください。',
+                    status=400
+                )
         
         return Response(
             data='入力したサイトへのサービスはまだサポートされていません。',
