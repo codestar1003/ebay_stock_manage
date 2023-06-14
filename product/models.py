@@ -17,7 +17,6 @@ class Product(TimeStampModel):
     url = models.URLField(_('url'), null=True, blank=True)
     title_jp = models.CharField(_('title JP'), max_length=255, null=True, blank=True)
     title_en = models.CharField(_('title EN'), max_length=255, null=True, blank=True)
-    brand = models.CharField(_('brand'), max_length=255, null=True, blank=True)
     condition = models.CharField(
         _('condition'),
         max_length=20,
@@ -65,9 +64,6 @@ class Product(TimeStampModel):
     @authenticated_users
     def has_scrape_data_permission(request):
         return True
-
-    
-    
 
 
 class ProductPhoto(TimeStampModel):

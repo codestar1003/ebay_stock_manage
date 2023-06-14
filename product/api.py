@@ -121,10 +121,9 @@ class ProductViewSet(ModelViewSet):
     def add_item(self, request):
         # Product
         product = Product(
-            url=request.data['url'],
+            url=request.data['sku'],
             title_jp=request.data['title_jp'],
             title_en=request.data['title_en'],
-            brand=request.data['brand'],
             condition=request.data['condition'],
             condition_desc=request.data['condition_desc'],
             price=request.data['price'],
