@@ -67,8 +67,11 @@ class ProductViewSet(ModelViewSet):
         text = request.data['text']
         try: 
             text_en = ts.translate_text(query_text=text, from_language='ja', to_language='en')
-        except ConnectionError:
-            raise ValueError('操作が失敗しました。もう一度お試しください。')
+        except Exception:
+            return Response(
+                data='操作が失敗しました。もう一度お試しください。',
+                status=400
+            )
         else:
             return Response(
                 data=text_en,
