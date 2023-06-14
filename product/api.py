@@ -26,29 +26,33 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def scrape_data(self, request):
         url = request.data['url']
-        engine = select_engine(url=url)()
+        engine = select_engine(url=url)
         if engine:
-            data = engine.scrape_data(source_url=url)
-            data['title_en'] = ts.translate_text(query_text=data['title_jp'], from_language='ja', to_language='en')
-            data['price'] = convert('JPY', 'USD', data['price'])
-            
-            # Photo
-            for photo in data['photos']:
-                response = requests.get(photo['url'])
-                image = Image.open(BytesIO(response.content))
-                photo['width'] = image.width
-                photo['height'] = image.height
+            engine = engine()
+            try:
+                data = engine.scrape_data(source_url=url)
+                data['title_en'] = ts.translate_text(query_text=data['title_jp'], from_language='ja', to_language='en')
+                data['price'] = convert('JPY', 'USD', data['price'])
+                
+                # Photo
+                for photo in data['photos']:
+                    response = requests.get(photo['url'])
+                    image = Image.open(BytesIO(response.content))
+                    photo['width'] = image.width
+                    photo['height'] = image.height
 
-            # Description
-            data['description_en'] = []
-            for description in data['description_jp']:
-                description_en = ts.translate_text(query_text=description, from_language='ja', to_language='en')
-                data['description_en'].append(description_en)
+                # Description
+                data['description_en'] = []
+                for description in data['description_jp']:
+                    description_en = ts.translate_text(query_text=description, from_language='ja', to_language='en')
+                    data['description_en'].append(description_en)
 
-            return Response(
-                data=data,
-                status=200
-            )
+                return Response(
+                    data=data,
+                    status=200
+                )
+            except Exception:
+                raise ValueError('入力したサイトへのサービスはまだサポートされていません。')
         
         return Response(
             data='入力したサイトへのサービスはまだサポートされていません。',
