@@ -52,6 +52,10 @@ class Product(TimeStampModel):
         null=True,
         blank=True
     )
+    point = models.IntegerField(
+        _('point'),
+        null=True
+    )
     location_country = models.CharField(
         max_length=100,
         default=Country.JAPAN,
