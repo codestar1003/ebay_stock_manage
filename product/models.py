@@ -77,6 +77,12 @@ class Product(TimeStampModel):
         null=True,
         blank=True
     )
+    created_by = models.ForeignKey(
+        "users.user",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
 
     @authenticated_users
     def has_read_permission(request):
