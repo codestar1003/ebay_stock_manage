@@ -14,6 +14,16 @@ class Product(TimeStampModel):
     class Country(models.TextChoices):
         JAPAN = 'JP'
 
+    class Status(models.TextChoices):
+        DRAFT = 'draft'
+        PUBLISH = 'publish'
+    
+    status = models.CharField(
+        _('status'),
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT
+    )
     url = models.URLField(_('url'), null=True, blank=True)
     title_jp = models.CharField(_('title JP'), max_length=255, null=True, blank=True)
     title_en = models.CharField(_('title EN'), max_length=255, null=True, blank=True)
