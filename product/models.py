@@ -15,8 +15,8 @@ class Product(TimeStampModel):
         JAPAN = 'JP'
 
     class Status(models.TextChoices):
-        DRAFT = 'draft'
-        PUBLISH = 'publish'
+        DRAFT = 'Draft'
+        PUBLISH = 'Publish'
     
     status = models.CharField(
         _('status'),
