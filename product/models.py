@@ -27,6 +27,9 @@ class Product(TimeStampModel):
     url = models.URLField(_('url'), null=True, blank=True)
     title_jp = models.CharField(_('title JP'), max_length=255, null=True, blank=True)
     title_en = models.CharField(_('title EN'), max_length=255, null=True, blank=True)
+    # item_category = models.IntegerField(
+    #     null=True
+    # )
     condition = models.CharField(
         _('condition'),
         max_length=20,
@@ -67,7 +70,7 @@ class Product(TimeStampModel):
         blank=True
     )
     profit = models.DecimalField(
-        _('quantity'),
+        _('profit'),
         max_digits=10,
         decimal_places=2,
         null=True,
