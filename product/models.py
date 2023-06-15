@@ -66,6 +66,13 @@ class Product(TimeStampModel):
         null=True,
         blank=True
     )
+    profit = models.DecimalField(
+        _('quantity'),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
 
     @authenticated_users
     def has_read_permission(request):
