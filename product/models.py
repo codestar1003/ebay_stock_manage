@@ -46,7 +46,14 @@ class Product(TimeStampModel):
         null=True,
         blank=True,
     )
-    price = models.DecimalField(
+    price_en = models.DecimalField(
+        _('price'),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    price_jp = models.DecimalField(
         _('price'),
         max_digits=10,
         decimal_places=2,
