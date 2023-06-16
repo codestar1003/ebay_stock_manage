@@ -24,6 +24,10 @@ class Product(TimeStampModel):
         choices=Status.choices,
         default=Status.DRAFT
     )
+    item_number = models.IntegerField(
+        _('item Number'),
+        null=True,
+    )
     url = models.URLField(_('url'), null=True, blank=True)
     title_jp = models.CharField(_('title JP'), max_length=255, null=True, blank=True)
     title_en = models.CharField(_('title EN'), max_length=255, null=True, blank=True)
