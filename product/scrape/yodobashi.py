@@ -23,6 +23,7 @@ class ScrapingEngine:
         data = {}
         data['title_jp'] = convert_text(dom.find('h1', attrs={'id': 'products_maintitle'}).span.text)
         data['price'] = int(dom.find('span', attrs={'id': 'js_scl_unitPrice'}).text[1:].replace(',', ''))
+        data['point'] = int(dom.find('span', attrs={'id': 'js_scl_pointValue'}).text.strip('ポイント').replace(',', ''))
         data['description_jp'] = [convert_text(dom.find('div', attrs={'id': 'pinfo_productSummury'}).contents[0].text)]
         data['photos'] = []
         photos = dom.find('div', attrs={'id': 'pImgThumbList'}).ul.find_all('li')
