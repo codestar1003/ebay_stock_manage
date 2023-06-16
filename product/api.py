@@ -16,6 +16,7 @@ from .serializers import ProductSerializer, ProductDescriptionSerializer, Produc
 from product.scrape.engineselector import select_engine
 from utils.convertcurrency import convert
 from utils.ebay_policy import DISPATCHTIMEMAX, RETURN_POLICY, SHIPPING_POLICY
+from utils.scrape_site import scraping_site
 
 
 class ProductViewSet(ModelViewSet):
@@ -121,9 +122,16 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def add_item(self, request):
         # Product
+        result = ''
+        for site in scraping_site.keys():
+            if site in request.data['sku']:
+                result = scraping_site[site]
+                break
+        
         product = Product(
             status='Draft',
             url=request.data['sku'],
+            site=result,
             title_jp=request.data['title_jp'],
             title_en=request.data['title_en'],
             condition=request.data['condition'],
