@@ -131,12 +131,13 @@ class ProductViewSet(ModelViewSet):
             price_jp=request.data['price_jp'],
             price_en=request.data['price_en'],
             quantity=request.data['quantity'],
-            point=request.data['point'],
             location_country=request.data['location_country'],
             location_city=request.data['location_city'],
             item_category=request.data['item_category'],
             created_by=request.user
         )
+        if request.data['point']:
+            product.point=request.data['point'],
         product.save()
 
         # ProductPhoto
