@@ -94,6 +94,10 @@ class Product(TimeStampModel):
         blank=True,
         on_delete=models.SET_NULL
     )
+    comment = models.TextField(
+        _('comment'),
+        null=True
+    )
 
     @authenticated_users
     def has_read_permission(request):
