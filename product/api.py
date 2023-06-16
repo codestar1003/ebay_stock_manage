@@ -122,15 +122,20 @@ class ProductViewSet(ModelViewSet):
     def add_item(self, request):
         # Product
         product = Product(
+            status='Draft',
             url=request.data['sku'],
             title_jp=request.data['title_jp'],
             title_en=request.data['title_en'],
             condition=request.data['condition'],
             condition_desc=request.data['condition_desc'],
-            price=request.data['price'],
+            price_jp=request.data['price_jp'],
+            price_en=request.data['price_en'],
             quantity=request.data['quantity'],
+            point=request.data['point'],
             location_country=request.data['location_country'],
             location_city=request.data['location_city'],
+            item_category=request.data['item_category'],
+            created_by=request.user
         )
         product.save()
 
@@ -195,11 +200,11 @@ class ProductViewSet(ModelViewSet):
                     'Location': product.location_city,
                     'ConditionID': product.condition,
                     'AutoPay': 'True',
-                    'PrimaryCategory': {'CategoryID': request.data['item_category']},
+                    'PrimaryCategory': {'CategoryID': product.item_category},
                     'Description': desc,
                     'ListingDuration': 'GTC',
                     'ListingType': 'FixedPriceItem',
-                    'StartPrice': product.price,
+                    'StartPrice': product.price_en,
                     'Currency': 'USD',
                     'Quantity': product.quantity,
                     'PictureDetails': {
@@ -217,7 +222,11 @@ class ProductViewSet(ModelViewSet):
                     }
                 }
             }
-            api.execute('AddItem', item)
+            response = api.execute('AddItem', item)
+
+            product.status = 'Publish'
+            product.item_number = response.reply.ItemID
+            product.save()
             return Response(
                 data='Success',
                 status=200
