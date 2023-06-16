@@ -39,7 +39,7 @@ class ProductViewSet(ModelViewSet):
             try:
                 data = engine.scrape_data(source_url=url)
                 data['title_en'] = ts.translate_text(query_text=data['title_jp'], from_language='ja', to_language='en')
-                data['price'] = convert('JPY', 'USD', data['price'])
+                data['price_en'] = convert('JPY', 'USD', data['price_jp'])
                 
                 # Photo
                 for photo in data['photos']:

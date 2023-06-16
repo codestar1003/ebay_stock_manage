@@ -13,7 +13,7 @@ class ScrapingEngine:
         item_detail = dom.find('div', attrs={'class': 'item_detail'})
         data = {}
         data['title_jp'] = convert_text(item_detail.find('h1', attrs={'class': 'item__name'}).text)
-        data['price'] = int(item_detail.find('span', attrs={'class': 'item__value'}).text[1:].replace(',', ''))
+        data['price_jp'] = int(item_detail.find('span', attrs={'class': 'item__value'}).text[1:].replace(',', ''))
         data['description_jp'] = []
         descriptions = item_detail.find('div', attrs={'class': 'item__description__line-limited'}).a.span.contents
         for description in descriptions:

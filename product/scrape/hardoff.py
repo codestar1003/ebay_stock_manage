@@ -12,7 +12,7 @@ class ScrapingEngine:
         item_detail = bs(resp.content, "html.parser").find('div', attrs={'class': 'product-detail'})
         data = {}
         data['title_jp'] = item_detail.find('div', attrs={'class': 'product-detail-name'}).h1.text
-        data['price'] = int(item_detail.find('span', attrs={'class': 'product-detail-price__main'}).text.replace(',', ''))
+        data['price_jp'] = int(item_detail.find('span', attrs={'class': 'product-detail-price__main'}).text.replace(',', ''))
         data['description_jp'] = []
         table= item_detail.find('div', attrs={'id': 'panel1'}).table.contents
         for row in table:

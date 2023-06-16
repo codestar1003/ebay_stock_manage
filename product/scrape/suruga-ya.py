@@ -13,7 +13,7 @@ class ScrapingEngine:
         dom = bs(resp.content, "html.parser")
         data = {}
         data['title_jp'] = convert_text(dom.find('h1', attrs={'id': 'item_title'}).text)
-        data['price'] = int(json.loads(dom.find('div', attrs={'class': 'item-price form-inline'}).div.input['data-zaiko'])['baika'])
+        data['price_jp'] = int(json.loads(dom.find('div', attrs={'class': 'item-price form-inline'}).div.input['data-zaiko'])['baika'])
         data['description_jp'] = []
         descriptions = dom.find('div', attrs={'id': 'item_detailInfo'}).find('p', attrs={'class': 'note text-break'}).contents
         for description in descriptions:

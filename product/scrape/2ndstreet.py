@@ -12,7 +12,7 @@ class ScrapingEngine:
         dom = bs(resp.content, 'html.parser')
         data = {}
         data['title_jp'] = convert_text(dom.find('div', attrs={'itemprop': 'name'}).text)
-        data['price'] = int(dom.find('span', attrs={'itemprop': 'price'})['content'])
+        data['price_jp'] = int(dom.find('span', attrs={'itemprop': 'price'})['content'])
         data['description_jp'] = [convert_text(dom.find('div', attrs={'itemprop': 'description'}).text)]
         data['photos'] = []
         photos = dom.find('div', attrs={'id': 'goodsImages'}).find('div', attrs={'id': 'sliderWrap'}).find('ul', attrs={'id': 'sliderThumbnail'}).find_all('img')

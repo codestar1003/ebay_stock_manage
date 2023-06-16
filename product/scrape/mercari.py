@@ -19,7 +19,7 @@ class ScrapingEngine:
             time.sleep(2)
 
         data['title_jp'] = convert_text(dom.find('div', attrs={'data-testid': 'name'}).div.h1.text)
-        data['price'] = int(dom.find('div', attrs={'data-testid': 'price'}).find_all('span')[-1].text.replace(',', ''))
+        data['price_jp'] = int(dom.find('div', attrs={'data-testid': 'price'}).find_all('span')[-1].text.replace(',', ''))
         data['description_jp'] = [convert_text(dom.find('pre', attrs={'data-testid': 'description'}).text)]
         data['photos'] = []
         photos_wrapper = dom.find('div', attrs={'class', 'slick-track'}).contents

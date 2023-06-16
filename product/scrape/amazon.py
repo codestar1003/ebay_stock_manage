@@ -23,7 +23,7 @@ class ScrapingEngine:
         item_detail = dom.find('div', attrs={'id': 'dp-container'})
         data = {}
         data['title_jp'] = item_detail.find('span', attrs={'id': 'productTitle'}).text
-        data['price'] = int(item_detail.find('span', attrs={'id': 'color_name_2_price'}).span.text.split('¥')[-1].replace(',', ''))
+        data['price_jp'] = int(item_detail.find('span', attrs={'id': 'color_name_2_price'}).span.text.split('¥')[-1].replace(',', ''))
         data['description_jp'] = []
         descriptions = item_detail.find('div', attrs={'id': 'feature-bullets'}).ul.find_all('span', attrs={'class': 'a-list-item'})
         for description in descriptions:

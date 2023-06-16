@@ -12,7 +12,7 @@ class ScrapingEngine:
         dom = bs(resp.content, 'html.parser')
         data = {}
         data['title_jp'] = convert_text(dom.find('h1', attrs={'class': 'ProductTitle__text'}).text)
-        data['price'] = int(convert_text(dom.find('dd', attrs={'class': 'Price__value'}).contents[0].strip('円')).replace(',', ''))
+        data['price_jp'] = int(convert_text(dom.find('dd', attrs={'class': 'Price__value'}).contents[0].strip('円')).replace(',', ''))
         data['description_jp'] = []
         descriptions = dom.find('div', attrs={'class': 'ProductExplanation__commentBody js-disabledContextMenu'}).contents
         for description in descriptions:
