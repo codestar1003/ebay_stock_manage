@@ -80,6 +80,12 @@ class Product(TimeStampModel):
         _('point'),
         null=True
     )
+    shipping_policy = models.CharField(
+        _('shipping Policy'),
+        max_length=100,
+        null=True,
+        blank=True
+    )
     location_country = models.CharField(
         max_length=100,
         default=Country.JAPAN,
