@@ -142,6 +142,7 @@ class ProductViewSet(ModelViewSet):
             location_country=request.data['location_country'],
             location_city=request.data['location_city'],
             item_category=request.data['item_category'],
+            shipping_policy=request.data['shipping_policy'],
             created_by=request.user
         )
         if request.data['point']:
