@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
     # 'dry_rest_permissions',
 
     # Apps
@@ -133,6 +134,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 CORS_ALLOWED_ORIGINS = [
