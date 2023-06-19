@@ -2,6 +2,7 @@
 *.env
 profit_attrs.txt
 shipping_fee.txt
+products.csv
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
