@@ -254,6 +254,46 @@ class ProductViewSet(ModelViewSet):
         except Exception as err:
             raise err
 
+    @action(detail=True, methods=['POST'])
+    def revise_item(self, request, pk):
+        product = Product.objects.get(pk=pk)
+        sku = request.data['sku']
+        sell_price = request.data['sell_price']
+        quantity = request.data['quantity']
+        profit = request.data['profit']
+        result = ''
+        for site in scraping_site.keys():
+            if site in sku:
+                result = scraping_site[site]
+                break
+
+        try:
+            # Set up the API connection
+            api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
+            item = {
+                'Item': {
+                    'ItemID': product.item_number,
+                    'StartPrice': product.price_en,
+                    'Quantity': product.quantity
+                }
+            }
+            api.execute('ReviseItem', item)
+            
+            # Update Product
+            product.url = sku
+            product.site = result
+            product.price_en = sell_price
+            product.quantity = quantity
+            product.profit = profit
+            product.save()
+            return Response(
+                data='Success',
+                status=200
+            )
+
+        except Exception as err:
+            raise err
+
 
 class ProductPhotoViewSet(ModelViewSet):
     serializer_class = ProductPhotoSerializer
