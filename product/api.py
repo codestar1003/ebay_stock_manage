@@ -17,6 +17,7 @@ from product.scrape.engineselector import select_engine
 from utils.convertcurrency import convert
 from utils.ebay_policy import DISPATCHTIMEMAX, RETURN_POLICY, SHIPPING_POLICY
 from utils.scrape_site import scraping_site
+from utils.profit_formula import profit_formula
 
 
 class ProductViewSet(ModelViewSet):
@@ -291,6 +292,53 @@ class ProductViewSet(ModelViewSet):
                 status=200
             )
 
+        except Exception as err:
+            raise err
+
+    @action(detail=False, methods=['POST'])
+    def bulk_update_product(self, request):
+        products = request.data['products']
+        try:
+            # Set up the API connection
+            api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
+            
+            for product in products:
+                result = ''
+                for site in scraping_site.keys():
+                    if site in product['url']:
+                        result = scraping_site[site]
+                        break
+                point = 0
+                if product['point']:
+                    point = int(product['point'])
+                already_product = Product.objects.get(pk=product['id'])
+                item = {
+                    'Item': {
+                        'ItemID': product['item_number'],
+                        'StartPrice': product['price_en'],
+                        'Quantity': product['quantity']
+                    }
+                }
+                api.execute('ReviseItem', item)
+
+                already_product.url = product['url']
+                already_product.site = result
+                already_product.quantity = product['quantity']
+                already_product.price_en = float(product['price_en'])
+                already_product.profit = profit_formula(
+                    float(product['price_en']),
+                    product['price_jp'],
+                    'JPY',
+                    str(product['item_category']),
+                    point,
+                    product['shipping_policy']
+                )
+                already_product.save()
+
+            return Response(
+                data='Success',
+                status=200
+            )
         except Exception as err:
             raise err
 
