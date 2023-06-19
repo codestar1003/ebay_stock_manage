@@ -24,10 +24,9 @@ class Product(TimeStampModel):
         choices=Status.choices,
         default=Status.DRAFT
     )
-    item_number = models.DecimalField(
+    item_number = models.CharField(
         _('item Number'),
-        max_digits=20,
-        decimal_places=1,
+        max_length=20,
         null=True,
         blank=True
     )
