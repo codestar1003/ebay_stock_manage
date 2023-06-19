@@ -61,10 +61,8 @@ class Product(TimeStampModel):
         null=True,
         blank=True
     )
-    price_jp = models.DecimalField(
+    price_jp = models.IntegerField(
         _('price'),
-        max_digits=10,
-        decimal_places=2,
         null=True,
         blank=True
     )
