@@ -17,10 +17,10 @@ class ScrapingEngine:
         pattern = r'\d+'
         data['point'] = int(re.findall(pattern, dom.find('span', attrs={'class', 'elPaypayPointText'}).text))
         data['description_jp'] = []
-        descriptions = dom.find('div', attrs={'class': 'ProductExplanation__commentBody js-disabledContextMenu'}).contents
-        for description in descriptions:
-            if(isinstance(description, str) and description.isspace() is not True):
-                data['description_jp'].append(convert_text(description))
+        # descriptions = dom.find('div', attrs={'class': 'ProductExplanation__commentBody js-disabledContextMenu'}).contents
+        # for description in descriptions:
+        #     if(isinstance(description, str) and description.isspace() is not True):
+        #         data['description_jp'].append(convert_text(description))
         data['photos'] = []
         photos = dom.find('ul', attrs={'class': 'elThumbnailItems'}).find_all('li')
         for photo in photos:
