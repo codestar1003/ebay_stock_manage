@@ -43,8 +43,12 @@ class UserViewSet(ModelViewSet):
         if user:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
+            data = {
+                'token': token.key,
+                'user': self.serializer_class(user).data
+            }
             return Response(
-                data=token.key,
+                data=data,
                 status=200
             )
         else:
