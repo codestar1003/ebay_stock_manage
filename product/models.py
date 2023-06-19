@@ -17,6 +17,7 @@ class Product(TimeStampModel):
     class Status(models.TextChoices):
         DRAFT = 'Draft'
         PUBLISH = 'Publish'
+        END='End'
     
     status = models.CharField(
         _('status'),
