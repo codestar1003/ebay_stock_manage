@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
 
 from rest_framework.authtoken.models import Token
@@ -52,3 +52,11 @@ class UserViewSet(ModelViewSet):
                 data='メールやパスワードが正しくありません。',
                 status=401
             )
+
+    @action(detail=False, methods=['POST'])
+    def logout(self, request):
+        logout(request)
+        return Response(
+            data='Success',
+            status=200
+        )
