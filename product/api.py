@@ -1,3 +1,4 @@
+import csv
 import json
 import requests
 import translators as ts
@@ -452,6 +453,33 @@ class ProductViewSet(ModelViewSet):
 
         return Response(
             data=rate,
+            status=200
+        )
+    
+    @action(detail=False, methods=['POST'])
+    def download_product(self, request):
+        with open(file=str(settings.BASE_DIR / 'media/products.csv'),  mode='w', encoding='utf-8', newline='') as f:
+            fieldnames = ['Item No', '品名', 'SKU', 'eBay', '数量', '仕入値（円）', 'ポイント', '売価($)', '利益', 'カテゴリNo', '配送ポリシー', '備考']
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            
+            for product in Product.objects.all():
+                writer.writerow({
+                    'Item No': product.item_number, 
+                    '品名': product.title_en, 
+                    'SKU': product.url, 
+                    'eBay': '販売先', 
+                    '数量': product.quantity, 
+                    '仕入値（円）': product.price_jp, 
+                    'ポイント': product.point, 
+                    '売価($)': product.price_en, 
+                    '利益': product.profit, 
+                    'カテゴリNo': product.item_category, 
+                    '配送ポリシー': product.shipping_policy, 
+                    '備考': product.comment,
+                })
+        return Response(
+            data='Success',
             status=200
         )
 
