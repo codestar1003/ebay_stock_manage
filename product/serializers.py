@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Product, ProductDescription, ProductPhoto
-
+from users.serializers import UserSerializer
 
 class ProductDescriptionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,7 +23,9 @@ class ProductSerializer(serializers.ModelSerializer):
         many=True, read_only=False, required=False
     )
 
+    created_by = UserSerializer(read_only=True)
+
     class Meta:
         model = Product
         fields = "__all__"
-
+        depth = 1
