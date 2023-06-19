@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from dry_rest_permissions.generics import DRYPermissions
+from django_filters import rest_framework
 
 from ebaysdk.trading import Connection
 from .models import Product, ProductDescription, ProductPhoto
@@ -24,15 +25,16 @@ from utils.profit_formula import profit_formula
 
 class ProductViewSet(ModelViewSet):
     serializer_class = ProductSerializer
+    queryset = Product.objects.all()
+    permission_classes = (DRYPermissions, )
+    filter_backends = [rest_framework.DjangoFilterBackend]
+    filterset_fields = ['status']
 
     def get_queryset(self):
         if self.request.user.is_staff:
             return super().get_queryset()
         else:
             return Product.objects.filter(created_by=self.request.user)
-            
-    queryset = Product.objects.all()
-    permission_classes = (DRYPermissions, )
 
     @action(detail=False, methods=['POST'])
     def scrape_data(self, request):
