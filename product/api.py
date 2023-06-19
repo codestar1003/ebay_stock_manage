@@ -364,6 +364,38 @@ class ProductViewSet(ModelViewSet):
         except Exception as err:
             raise err
 
+    @action(detail=False, methods=['POST'])
+    def upload_product(self, request):
+        data = request.data['product']
+        for item in data:
+            result = ''
+            for site in scraping_site.keys():
+                if site in item['SKU']:
+                    result = scraping_site[site]
+                    break
+
+            product = Product(
+                status='Publish',
+                item_number=item['Item No'],
+                url=item['SKU'],
+                site=result,
+                title_en=item['品名'],
+                item_category=item['カテゴリNo'],
+                price_en=item['売価($)'],
+                price_jp=item['仕入値（円）'],
+                quantity=item['数量'],
+                point=item['ポイント'],
+                shipping_policy=item['配送ポリシー'],
+                profit=item['利益'],
+                created_by=request.user,
+                comment=item['備考']
+            )
+            product.save()
+        return Response(
+            data='Success',
+            status=200
+        )
+    
 
 class ProductPhotoViewSet(ModelViewSet):
     serializer_class = ProductPhotoSerializer
