@@ -11,7 +11,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from dry_rest_permissions.generics import DRYPermissions
-from django_filters import rest_framework
 
 from ebaysdk.trading import Connection
 from .models import Product, ProductDescription, ProductPhoto
@@ -21,13 +20,13 @@ from utils.convertcurrency import convert
 from utils.ebay_policy import DISPATCHTIMEMAX, RETURN_POLICY, SHIPPING_POLICY
 from utils.scrape_site import scraping_site
 from utils.profit_formula import profit_formula
-
+from .filterbackend import FilterBackend
 
 class ProductViewSet(ModelViewSet):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
     permission_classes = (DRYPermissions, )
-    filter_backends = [rest_framework.DjangoFilterBackend]
+    filter_backends = [FilterBackend]
     filterset_fields = ['status']
 
     def get_queryset(self):
