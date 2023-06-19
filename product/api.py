@@ -128,6 +128,15 @@ class ProductViewSet(ModelViewSet):
                 result = scraping_site[site]
                 break
         
+        sell_price = float(request.data['price_en'])
+        buy_price = request.data['price_jp']
+        category_id = request.data['item_category']
+        point = 0
+        if request.data['point']:
+            point = int(request.data['point'])
+        shipping_policy = request.data['shipping_policy']
+        profit = profit_formula(sell_price, buy_price, 'JPY', category_id, point, shipping_policy)
+
         product = Product(
             status='Draft',
             url=request.data['sku'],
@@ -143,10 +152,11 @@ class ProductViewSet(ModelViewSet):
             location_city=request.data['location_city'],
             item_category=request.data['item_category'],
             shipping_policy=request.data['shipping_policy'],
+            profit=profit,
             created_by=request.user
         )
         if request.data['point']:
-            product.point=request.data['point'],
+            product.point=request.data['point']
         product.save()
 
         # ProductPhoto
