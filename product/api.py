@@ -342,6 +342,28 @@ class ProductViewSet(ModelViewSet):
         except Exception as err:
             raise err
 
+    @action(detail=True, methods=['POST'])
+    def end_item(self, request, pk):
+        product = Product.objects.get(pk=pk)
+        try:
+            # Set up the API connection
+            api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
+            item = {
+                'ItemID': product.item_number,
+                'EndingReason': 'Incorrect'
+            }
+            api.execute('EndItem', item)
+            
+            # Update Product
+            product.status = 'End'
+            product.save()
+            return Response(
+                data='Success',
+                status=200
+            )
+        except Exception as err:
+            raise err
+
 
 class ProductPhotoViewSet(ModelViewSet):
     serializer_class = ProductPhotoSerializer
