@@ -1,3 +1,4 @@
+import json
 import requests
 import translators as ts
 import uuid
@@ -396,6 +397,64 @@ class ProductViewSet(ModelViewSet):
             status=200
         )
     
+    @action(detail=False, methods=['POST'])
+    def upload_shipping_fee(self, request):
+        fee = {}
+        for shipping in request.data['shipping']:
+            fee[list(shipping.items())[0][-1]] = list(shipping.items())[-1][-1]
+
+        fee = json.dumps(fee, indent=4, ensure_ascii=False)
+        with open(file=str(settings.BASE_DIR / 'utils/shipping_fee.txt'),  mode='w', encoding='utf-8') as f:
+            f.write(fee)
+        
+        return Response(
+            data='Success',
+            status=200
+        )
+    
+    @action(detail=False, methods=['GET'])
+    def shipping_fee(self, request):
+        with open(file=str(settings.BASE_DIR / 'utils/shipping_fee.txt'),  mode='r', encoding='utf-8') as f:
+            fee = f.read()
+        
+        return Response(
+            data=json.loads(fee),
+            status=200
+        )
+    
+    @action(detail=False, methods=['GET'])
+    def profit_attr(self, request):
+        with open(file=str(settings.BASE_DIR / 'utils/profit_attrs.txt'),  mode='r', encoding='utf-8') as f:
+            profit_attrs = f.read()
+        
+        return Response(
+            data=json.loads(profit_attrs),
+            status=200
+        )
+    
+    @action(detail=False, methods=['POST'])
+    def update_profit_attr(self, request):
+        profit_attr = request.data['profit_attr']
+        with open(file=str(settings.BASE_DIR / 'utils/profit_attrs.txt'),  mode='w', encoding='utf-8') as f:
+            f.write(json.dumps(profit_attr, indent=4))
+
+        return Response(
+            data='Success',
+            status=200
+        )
+
+    @action(detail=False, methods=['POST'])
+    def currency_rate(self, request):
+        currency = request.data['currency']
+        url = 'https://api.exchangerate-api.com/v4/latest/USD'
+        currencies = requests.get(url).json()['rates']
+        rate = currencies[currency]
+
+        return Response(
+            data=rate,
+            status=200
+        )
+
 
 class ProductPhotoViewSet(ModelViewSet):
     serializer_class = ProductPhotoSerializer
