@@ -10,6 +10,7 @@ from PIL import Image
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.filters import SearchFilter
 from dry_rest_permissions.generics import DRYPermissions
 
 from ebaysdk.trading import Connection
@@ -26,8 +27,9 @@ class ProductViewSet(ModelViewSet):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
     permission_classes = (DRYPermissions, )
-    filter_backends = [FilterBackend]
+    filter_backends = [FilterBackend, SearchFilter]
     filterset_fields = ['status']
+    search_fields = ['item_number', 'title_en', 'url', 'price_en', 'shipping_policy']
 
     def get_queryset(self):
         if self.request.user.is_staff:
