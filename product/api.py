@@ -444,18 +444,6 @@ class ProductViewSet(ModelViewSet):
             data='Success',
             status=200
         )
-
-    @action(detail=False, methods=['POST'])
-    def currency_rate(self, request):
-        currency = request.data['currency']
-        url = 'https://api.exchangerate-api.com/v4/latest/USD'
-        currencies = requests.get(url).json()['rates']
-        rate = currencies[currency]
-
-        return Response(
-            data=rate,
-            status=200
-        )
     
     @action(detail=False, methods=['POST'])
     def download_product(self, request):
