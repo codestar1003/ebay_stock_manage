@@ -32,10 +32,10 @@ class ProductViewSet(ModelViewSet):
     search_fields = ['item_number', 'title_en', 'url', 'price_en', 'shipping_policy']
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return super().get_queryset()
-        else:
-            return Product.objects.filter(created_by=self.request.user)
+        # if self.request.user.is_staff:
+        #     return super().get_queryset()
+        # else:
+        return Product.objects.filter(created_by=self.request.user)
 
     @action(detail=False, methods=['POST'])
     def scrape_data(self, request):
