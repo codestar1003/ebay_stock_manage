@@ -57,6 +57,16 @@ class UserViewSet(ModelViewSet):
                 status=401
             )
 
+    def update(self, request, *args, **kwargs):
+        data = request.data
+        serializer = self.serializer_class(instance=request.user, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                data='Success',
+                status=200
+            )
+
     @action(detail=False, methods=['GET'])
     def get_ebay_info(self, request):
         serializer = self.serializer_class(request.user).data

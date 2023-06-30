@@ -51,3 +51,7 @@ class User(AbstractUser):
     @authenticated_users
     def has_write_permission(request):
         return True
+
+    @authenticated_users
+    def has_object_write_permission():
+        return True
