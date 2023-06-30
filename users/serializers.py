@@ -14,5 +14,9 @@ class UserSerializer(serializers.ModelSerializer):
             'id',
             'email',
             'username',
-            'password'
+            'password',
+            'app_id',
+            'dev_id',
+            'cert_id',
+            'ebay_token'
         ]
