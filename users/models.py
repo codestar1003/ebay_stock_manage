@@ -45,5 +45,9 @@ class User(AbstractUser):
         return True
     
     @authenticated_users
+    def has_get_ebay_info_permission(request):
+        return True
+
+    @authenticated_users
     def has_write_permission(request):
         return True
