@@ -64,7 +64,7 @@ class UserViewSet(ModelViewSet):
             'app_id': serializer['app_id'] or '',
             'dev_id': serializer['dev_id'] or '',
             'cert_id': serializer['cert_id'] or '',
-            'token': serializer['ebay_token'] or '',
+            'ebay_token': serializer['ebay_token'] or '',
         }
         return Response(
             data=data,
