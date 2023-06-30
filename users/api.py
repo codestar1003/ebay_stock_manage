@@ -57,6 +57,20 @@ class UserViewSet(ModelViewSet):
                 status=401
             )
 
+    @action(detail=False, methods=['GET'])
+    def get_ebay_info(self, request):
+        serializer = self.serializer_class(request.user).data
+        data = {
+            'app_id': serializer['app_id'] or '',
+            'dev_id': serializer['dev_id'] or '',
+            'cert_id': serializer['cert_id'] or '',
+            'token': serializer['ebay_token'] or '',
+        }
+        return Response(
+            data=data,
+            status=200
+        )
+
     @action(detail=False, methods=['POST'])
     def logout(self, request):
         logout(request)
