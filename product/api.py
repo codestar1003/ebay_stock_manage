@@ -89,41 +89,43 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def get_item_specific(self, request):
         item_number = request.data['item_number']
-        
-        # Set up the API connection
-        api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
-        response = api.execute(
-            'GetItem',
-            {
-                'ItemID': item_number,
-                'IncludeItemSpecifics': 'True'
-            }
-        )
-        item_specifics = response.reply.Item.ItemSpecifics.NameValueList
-        required_specifics = []
-        optional_specifics = []
-        for item_specific in item_specifics:
-            if(getattr(item_specific, 'Name') == 'Brand' or getattr(item_specific, 'Name') == 'Type'):
-                required_specifics.append(
-                    {
-                        'Name': item_specific.Name,
-                        'Value': item_specific.Value,
-                        'Condition': 'Required',
-                    }
-                )
-            else:
-                optional_specifics.append(
-                    {
-                        'Name': item_specific.Name,
-                        'Value': item_specific.Value,
-                        'Condition': 'Optional',
-                    }
-                )
-        result = required_specifics + optional_specifics
-        return Response(
-            data=result,
-            status=200
-        )
+        try:
+            # Set up the API connection
+            api = Connection(appid=request.user.app_id, devid=request.user.dev_id, certid=request.user.cert_id, token=request.user.ebay_token, config_file=None)
+            response = api.execute(
+                'GetItem',
+                {
+                    'ItemID': item_number,
+                    'IncludeItemSpecifics': 'True'
+                }
+            )
+            item_specifics = response.reply.Item.ItemSpecifics.NameValueList
+            required_specifics = []
+            optional_specifics = []
+            for item_specific in item_specifics:
+                if(getattr(item_specific, 'Name') == 'Brand' or getattr(item_specific, 'Name') == 'Type'):
+                    required_specifics.append(
+                        {
+                            'Name': item_specific.Name,
+                            'Value': item_specific.Value,
+                            'Condition': 'Required',
+                        }
+                    )
+                else:
+                    optional_specifics.append(
+                        {
+                            'Name': item_specific.Name,
+                            'Value': item_specific.Value,
+                            'Condition': 'Optional',
+                        }
+                    )
+            result = required_specifics + optional_specifics
+            return Response(
+                data=result,
+                status=200
+            )
+        except Exception as err:
+            raise err
     
     @action(detail=False, methods=['POST'])
     def add_item(self, request):
@@ -202,12 +204,7 @@ class ProductViewSet(ModelViewSet):
 
         try:
             # Set up the API connection
-            api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
-            
-            # Authenticate and get a sesstion token
-            # response = api.execute('GetSessionID', {})
-            # session_id = response.reply.SessionID
-
+            api = Connection(appid=request.user.app_id, devid=request.user.dev_id, certid=request.user.cert_id, token=request.user.ebay_token, config_file=None)
             # Create a listing for the item
             namevaluelist = []
             for index, type in enumerate(request.data['item_specific_type']):
@@ -275,7 +272,7 @@ class ProductViewSet(ModelViewSet):
 
         try:
             # Set up the API connection
-            api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
+            api = Connection(appid=request.user.app_id, devid=request.user.dev_id, certid=request.user.cert_id, token=request.user.ebay_token, config_file=None)
             item = {
                 'Item': {
                     'ItemID': product.item_number,
@@ -305,7 +302,7 @@ class ProductViewSet(ModelViewSet):
         products = request.data['products']
         try:
             # Set up the API connection
-            api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
+            api = Connection(appid=request.user.app_id, devid=request.user.dev_id, certid=request.user.cert_id, token=request.user.ebay_token, config_file=None)
             
             for product in products:
                 result = ''
@@ -352,7 +349,7 @@ class ProductViewSet(ModelViewSet):
         product = Product.objects.get(pk=pk)
         try:
             # Set up the API connection
-            api = Connection(appid=settings.APP_ID, devid=settings.DEV_ID, certid=settings.CERT_ID, token=settings.TOKEN, config_file=None)
+            api = Connection(appid=request.user.app_id, devid=request.user.dev_id, certid=request.user.cert_id, token=request.user.ebay_token, config_file=None)
             item = {
                 'ItemID': product.item_number,
                 'EndingReason': 'Incorrect'
