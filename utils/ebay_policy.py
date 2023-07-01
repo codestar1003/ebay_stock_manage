@@ -11,7 +11,7 @@ DISPATCHTIMEMAX = {
     '【FedEx - DHL】00.0 ~ 00.5kg 【30days】【EU含む】': '5',
     '【FedEx - DHL】00.5 ~ 01.0kg 【5days】【EU含む】': '5',
     '【US・EU・Mx・Ca・Asia 送料無料】': '5',
-    'エコSAL】 5day': '5',
+    '【エコSAL】 5day': '5',
 }
 
 RETURN_POLICY = {
@@ -517,7 +517,7 @@ SHIPPING_POLICY = {
         ],
     },
 
-    'エコSAL】 5day': {
+    '【エコSAL】 5day': {
         'ShippingType': 'Flat',
         'GlobalShipping': 'True',
         'ShippingServiceOptions': {
