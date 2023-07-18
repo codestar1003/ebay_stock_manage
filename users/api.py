@@ -19,8 +19,10 @@ class UserViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def register(self, request):
         user_exist = User.objects.filter(Q(email=request.data['email']) | Q(username=request.data['username'])).first()
+
         if not user_exist:
             serializer = self.serializer_class(data = request.data)
+            
             if serializer.is_valid():
                 user = User.objects.create_user(**serializer.validated_data)
                 return Response(status=200)

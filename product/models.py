@@ -5,90 +5,45 @@ from dry_rest_permissions.generics import authenticated_users
 
 from utils.models import TimeStampModel
 
+class Product(models.Model):
 
-class Product(TimeStampModel):
-    class Condition(models.TextChoices):
-        NEW = 1000
-        USED = 3000
-
-    class Country(models.TextChoices):
-        JAPAN = 'JP'
-
-    class Status(models.TextChoices):
-        DRAFT = 'Draft'
-        PUBLISH = 'Publish'
-        END='End'
-    
-    status = models.CharField(
-        _('status'),
-        max_length=20,
-        choices=Status.choices,
-        default=Status.DRAFT
+    created_at = models.CharField(
+        _('created at'),
+        max_length=30
     )
-    item_number = models.CharField(
-        _('item Number'),
-        max_length=20,
+    updated_at = models.CharField(
+        _('updated at'),
+        max_length=30,
         null=True,
         blank=True
     )
-    url = models.URLField(_('url'), null=True, blank=True)
-    site = models.CharField(
-        _('site'),
-        max_length=100,
-        null=True,
-        blank=True
+    product_name = models.CharField(
+        _('product_name'),
+        max_length=255
     )
-    title_jp = models.CharField(_('title JP'), max_length=255, null=True, blank=True)
-    title_en = models.CharField(_('title EN'), max_length=255, null=True, blank=True)
-    item_category = models.IntegerField(
-        _('item Category'),
-        null=True
+    ec_site = models.CharField(
+        _('ec_site'),
+        max_length=50
     )
-    condition = models.CharField(
-        _('condition'),
-        max_length=20,
-        blank=True,
-        choices=Condition.choices
+    purchase_url = models.CharField(
+        _('purchase_url'),
+        max_length=500
     )
-    condition_desc = models.TextField(
-        _('condition Description'),
-        null=True,
-        blank=True,
+    ebay_url = models.CharField(
+        _('ebay_url'),
+        max_length=500
     )
-    price_en = models.DecimalField(
-        _('price'),
+    purchase_price = models.DecimalField(
+        _('purchase_price'),
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True
     )
-    price_jp = models.IntegerField(
-        _('price'),
-        null=True,
-        blank=True
-    )
-    quantity = models.IntegerField(
-        _('quantity'),
-        null=True,
-        blank=True
-    )
-    point = models.IntegerField(
-        _('point'),
-        null=True
-    )
-    shipping_policy = models.CharField(
-        _('shipping Policy'),
-        max_length=100,
-        null=True,
-        blank=True
-    )
-    location_country = models.CharField(
-        max_length=100,
-        default=Country.JAPAN,
-        choices=Country.choices
-    )
-    location_city = models.CharField(
-        max_length=255,
+    sell_price_en = models.DecimalField(
+        _('sell_price_en'),
+        max_digits=10,
+        decimal_places=2,
         null=True,
         blank=True
     )
@@ -99,15 +54,41 @@ class Product(TimeStampModel):
         null=True,
         blank=True
     )
-    created_by = models.ForeignKey(
-        "users.user",
+    prima = models.DecimalField(
+        _('prima'),
+        max_digits=10,
+        decimal_places=2,
         null=True,
-        blank=True,
-        on_delete=models.SET_NULL
+        blank=True
     )
-    comment = models.TextField(
-        _('comment'),
+    shipping = models.DecimalField(
+        _('export shipping fee'),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    quantity = models.IntegerField(
+        _('quantity'),
         null=True
+    )
+    order_num = models.CharField(
+        _('order_num'),
+        max_length=50
+    )
+    ordered_at = models.CharField(
+        _('ordered_at'),
+        max_length = 30
+    )
+    notes = models.CharField(
+        _('notes'),
+        max_length = 3000,
+        null=True,
+        blank=True
+    )
+    created_by = models.CharField(
+        "users.user",
+        max_length = 64
     )
 
     @authenticated_users
@@ -122,6 +103,106 @@ class Product(TimeStampModel):
     def has_scrape_data_permission(request):
         return True
 
+class DeletedList(models.Model):
+
+    created_at = models.CharField(
+        _('created at'),
+        max_length=30
+    )
+    updated_at = models.CharField(
+        _('updated at'),
+        max_length=30
+    )
+    product_name = models.CharField(
+        _('product_name'),
+        max_length=255
+    )
+    ec_site = models.CharField(
+        _('ec_site'),
+        max_length=50
+    )
+    purchase_url = models.CharField(
+        _('purchase_url'),
+        max_length=500
+    )
+    ebay_url = models.CharField(
+        _('ebay_url'),
+        max_length=500
+    )
+    purchase_price = models.DecimalField(
+        _('purchase_price'),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    sell_price_en = models.DecimalField(
+        _('sell_price_en'),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    profit = models.DecimalField(
+        _('profit'),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    prima = models.DecimalField(
+        _('prima'),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    shipping = models.DecimalField(
+        _('export shipping fee'),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    quantity = models.IntegerField(
+        _('quantity'),
+        null=True
+    )
+    order_num = models.CharField(
+        _('order_num'),
+        max_length=50
+    )
+    ordered_at = models.CharField(
+        _('ordered_at'),
+        max_length = 30
+    )
+    created_by = models.ForeignKey(
+        "users.user",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+    notes = models.TextField(
+        _('notes'),
+        null=True,
+        blank=True
+    )
+    deleted_at = models.CharField(
+        _('ordered_at'),
+        max_length = 30
+    )
+
+    @authenticated_users
+    def has_read_permission(request):
+        return True
+
+    @authenticated_users
+    def has_write_permission(request):
+        return True
+
+    @authenticated_users
+    def has_scrape_data_permission(request):
+        return True
 
 class ProductPhoto(TimeStampModel):
     product = models.ForeignKey(

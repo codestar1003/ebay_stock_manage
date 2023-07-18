@@ -29,7 +29,7 @@ class User(AbstractUser):
     )
     ebay_token = models.CharField(
         _('ebay Token'),
-        max_length=255,
+        max_length=3000,
         null=True,
         blank=True
     )

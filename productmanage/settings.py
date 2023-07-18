@@ -171,7 +171,7 @@ MEDIA_URL = '/media/'
 SERVER_URL= env('SERVER_URL')
 
 #eBay
-APP_ID = env('APP_ID')
-DEV_ID = env('DEV_ID')
-CERT_ID = env('CERT_ID')
-TOKEN = env('Token')
+# APP_ID = env('APP_ID')
+# DEV_ID = env('DEV_ID')
+# CERT_ID = env('CERT_ID')
+# TOKEN = env('Token')
