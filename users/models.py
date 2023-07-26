@@ -6,6 +6,8 @@ from dry_rest_permissions.generics import authenticated_users
 
 
 class User(AbstractUser):
+    is_superuser = models.BooleanField(default=False)
+    username = models.CharField(max_length=30)
     email = models.EmailField(max_length=250)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

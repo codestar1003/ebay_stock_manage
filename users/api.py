@@ -15,6 +15,15 @@ class UserViewSet(ModelViewSet):
     permission_classes = (DRYPermissions, )
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    @action(detail=False, methods=['GET'])
+    def get_users(self, request):
+        users = User.objects.all().order_by('id').values('id', 'username')
+
+        return Response(
+            {'users': users},
+            status=200
+        )
     
     @action(detail=False, methods=['POST'])
     def register(self, request):
@@ -49,6 +58,7 @@ class UserViewSet(ModelViewSet):
                 'token': token.key,
                 'user': self.serializer_class(user).data
             }
+
             return Response(
                 data=data,
                 status=200
@@ -68,6 +78,7 @@ class UserViewSet(ModelViewSet):
                 data='Success',
                 status=200
             )
+
 
     @action(detail=False, methods=['GET'])
     def get_ebay_info(self, request):
