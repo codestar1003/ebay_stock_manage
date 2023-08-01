@@ -20,8 +20,6 @@ from .serializers import ProductSerializer, DeletedListSerializer
 from product.scrape.engineselector import select_engine
 from utils.convertcurrency import convert
 from utils.ebay_policy import DISPATCHTIMEMAX, RETURN_POLICY, SHIPPING_POLICY
-from utils.scrape_site import scraping_site
-from utils.profit_formula import profit_formula
 from .filterbackend import FilterBackend
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -56,15 +54,27 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def validate_product(self, request):
         info = request.data['product_info']
-        ecsite = info['ecsite_url']
-        ebay = info['ebay_url']
+        ecsite = info['ecsite']
+        purchase_url = info['purchase_url']
+        ebay_url = info['ebay_url']
         itemID = info['item_id']
 
-        # validate duplicate
-        # products = Product.objects.filter(purchase_url=ecsite).values | Product.objects.filter(ebay_url=ebay).values
+        products = Product.objects.filter(purchase_url = purchase_url).values() | Product.objects.filter(ebay_url = ebay_url).values()
 
-        # if len(products) > 0:
-        #     return Response(error='すでに存在しています！', status=400) 
+        # try:
+        #     # validate duplicate
+        #     products = Product.objects.filter(purchase_url = purchase_url).values() | Product.objects.filter(ebay_url = ebay_url).values()
+
+        # except Exception as err:
+        #     return Response(
+        #         {'error' : 'すでに存在しています！'}, status = 200
+        #     )
+
+
+        if len(products) > 0:
+            return Response(
+                {'error' : 'すでに存在しています！'}, status = 200
+            )
 
         # Get ebay information
         # try:
@@ -110,26 +120,32 @@ class ProductViewSet(ModelViewSet):
         #     return Response({'error': 'Invalid eBay product info!'})
 
         # Scraping data
-        engine = select_engine(url=ecsite)
+
+        engine = select_engine(url = ecsite)
         
         if engine:
             engine = engine()
             try:
-                data = engine.scrape_data(source_url=ecsite)
-                data['sell_price_en'] = convert('JPY', 'USD', data['purchase_price'])
+                data = engine.scrape_data(source_url = purchase_url)
 
-                return Response(
-                    data=data,
-                    status=200
-                )
+                if data['nothing'] == False:
+                    # data['sell_price_en'] = convert('JPY', 'USD', data['purchase_price'])
+
+                    return Response(
+                        data = data,
+                        status = 200
+                    )
+                
+                else:
+                    return Response(
+                        {'error' : 'この商品は削除されました。'}, status = 200
+                    )
             except Exception as err:
                 raise err
         else:
             return Response(
-                error='入力したサイトへのサービスはまだサポートされていません。', status=200
+                {'error':'入力したサイトへのサービスはまだサポートされていません。'}, status = 200
             )
-
-        # return Response({'valid': True}, status=200)
     
     @action(detail=False, methods=['POST'])
     def get_item_specific(self, request):
@@ -203,48 +219,45 @@ class ProductViewSet(ModelViewSet):
     def add_item(self, request):
         # Product
         item = request.data['product']
-
-        print(item['ec_site'])
-
+        ecsite = request.data['ecsite']
         product = ()
 
         try:
             product = Product(
-                created_at=item['created_at'],
-                product_name=item['product_name'],
-                ec_site=item['ec_site'],
-                purchase_url=item['purchase_url'],
-                ebay_url=item['ebay_url'],
-                purchase_price=item['purchase_price'],
-                sell_price_en=item['sell_price_en'],
-                profit=item['profit'],
-                profit_rate=item['profit_rate'],
-                prima=item['prima'],
-                shipping=item['shipping'],
-                quantity=item['quantity'],
-                created_by=item['created_by'],
-                notes=item['notes']
+                created_at = item['created_at'],
+                product_name = item['product_name'],
+                ec_site = ecsite,
+                purchase_url = item['purchase_url'],
+                ebay_url = item['ebay_url'],
+                purchase_price = item['purchase_price'],
+                sell_price_en = item['sell_price_en'],
+                profit = item['profit'],
+                profit_rate = item['profit_rate'],
+                prima = item['prima'],
+                shipping = item['shipping'],
+                quantity = item['quantity'],
+                created_by = item['created_by'],
+                notes = item['notes']
             )
             
             product.save()
 
             return Response(
                 {'Success!'},
-                status=200
+                status = 200
             )
             
         except Exception as err:
-            return Response(error='登録操作が失敗しました!', status=400)
+            return Response(error = '登録操作が失敗しました!', status=400)
         
     @action(detail=False, methods=['GET'])  
     def get_results(self, request):
 
         worker = request.GET.get('worker')
         month = request.GET.get('month')
+        results = Product.objects.filter(created_by = worker, created_at__startswith = month).order_by('id').values('id', 'created_at', 'created_by')
 
-        results = Product.objects.filter(created_by=worker, created_at__startswith=month).order_by('id').values('id', 'created_at', 'created_by')
-
-        return Response({'results': results}, status=200)
+        return Response({'results': results}, status = 200)
     
         
     @action(detail=False, methods=['GET'])    
@@ -401,7 +414,7 @@ class ProductViewSet(ModelViewSet):
     
     @action(detail=False, methods=['GET'])
     def get_ecsites(self, request):
-        with open(file=str(settings.BASE_DIR / 'utils/ecsites.txt'),  mode='r', encoding='utf-8') as f:
+        with open(file=str(settings.BASE_DIR / 'utils/scrape_site.txt'),  mode='r', encoding='utf-8') as f:
             ecsites = f.read()
         
         return Response(
@@ -412,7 +425,7 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def update_ecsites(self, request):
         ecsites = request.data['ecsites']
-        with open(file=str(settings.BASE_DIR / 'utils/ecsites.txt'),  mode='w', encoding='utf-8') as f:
+        with open(file=str(settings.BASE_DIR / 'utils/scrape_site.txt'),  mode='w', encoding='utf-8') as f:
             f.write(json.dumps(ecsites, indent=4))
 
         return Response(

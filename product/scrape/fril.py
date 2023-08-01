@@ -12,7 +12,17 @@ class ScrapingEngine:
         dom = bs(resp.content, 'html.parser')
         item_detail = dom.find('div', attrs={'class': 'item_detail'})
         data = {}
-        data['product_name'] = item_detail.find('h1', attrs={'class': 'item__name'}).text
-        data['purchase_price'] = int(item_detail.find('span', attrs={'class': 'item__value'}).text[1:].replace(',', ''))
+
+        isValid = True
+
+        try:
+            data['purchase_price'] = int(item_detail.find('span', attrs={'class': 'item__value'}).text[1:].replace(',', ''))
+        except:
+            isValid = False
+            data['nothing'] = True
+
+        if isValid:
+            data['product_name'] = item_detail.find('h1', attrs={'class': 'item__name'}).text
+            data['nothing'] = False
 
         return data
