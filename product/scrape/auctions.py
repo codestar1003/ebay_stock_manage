@@ -12,16 +12,10 @@ class ScrapingEngine:
         )
         dom = bs(resp.content, 'html.parser')
         data = {}
-        
-        isValid = True
 
         try:
             data['purchase_price'] = int(convert_text(dom.find('dd', attrs={'class': 'Price__value'}).contents[0].strip('円')).replace(',', ''))
-        except:
-            isValid = False
-            data['nothing'] = True
 
-        if isValid == True:
             data['product_name'] = convert_text(dom.find('h1', attrs={'class': 'ProductTitle__text'}).text)
             product_date = convert_text(dom.find_all('td', attrs={'class': 'Section__tableData'})[-2].text).replace('（月）', ' ')
 
@@ -34,4 +28,7 @@ class ScrapingEngine:
             if date1 < date2:
                 data['nothing'] = True
 
+        except:
+            data['nothing'] = True
+            
         return data

@@ -76,51 +76,6 @@ class ProductViewSet(ModelViewSet):
                 {'error' : 'すでに存在しています！'}, status = 200
             )
 
-        # Get ebay information
-        # try:
-            # Set up the API connection
-            # api = Connection(appid=request.user.app_id, devid=request.user.dev_id, certid=request.user.cert_id, token=request.user.ebay_token, config_file=None)
-
-            # response = api.execute(
-            #     'GetItem',
-            #     {
-            #         'ItemID': itemID,
-            #         'IncludeItemSpecifics': 'True'
-            #     }
-            # )
-
-            # item_specifics = response.reply.Item.ItemSpecifics.NameValueList
-            # required_specifics = []
-            # optional_specifics = []
-            
-            # for item_specific in item_specifics:
-            #     if(getattr(item_specific, 'Name') == 'Brand' or getattr(item_specific, 'Name') == 'Type'):
-            #         required_specifics.append(
-            #             {
-            #                 'Name': item_specific.Name,
-            #                 'Value': item_specific.Value,
-            #                 'Condition': 'Required',
-            #             }
-            #         )
-            #     else:
-            #         optional_specifics.append(
-            #             {
-            #                 'Name': item_specific.Name,
-            #                 'Value': item_specific.Value,
-            #                 'Condition': 'Optional',
-            #             }
-            #         )
-            # result = required_specifics + optional_specifics
-
-        #     return Response(
-        #         data=result,
-        #         status=200
-        #     )
-        # except Exception as err:
-        #     return Response({'error': 'Invalid eBay product info!'})
-
-        # Scraping data
-
         engine = select_engine(url = ecsite)
         
         if engine:
@@ -183,8 +138,8 @@ class ProductViewSet(ModelViewSet):
                     )
             result = required_specifics + optional_specifics
             return Response(
-                data=result,
-                status=200
+                data = result,
+                status = 200
             )
         except Exception as err:
             raise err
@@ -195,14 +150,16 @@ class ProductViewSet(ModelViewSet):
 
         perPageNum = request.GET.get('pageSize')
         page = request.GET.get('page')
-        user = request.GET.get('user')
+        creator = request.GET.get('created_by')
+        superuser = request.GET.get('superuser')
 
         products_list = []
 
-        if user == '':
-            products_list = Product.objects.all().order_by('id')
+        if creator == '':
+            if superuser == True:
+                products_list = Product.objects.all().order_by('id')
         else:
-            products_list = Product.objects.filter(created_by=user).order_by('id')
+            products_list = Product.objects.filter(created_by = creator).order_by('id')
 
         paginator = Paginator(products_list, perPageNum)
 
@@ -247,8 +204,47 @@ class ProductViewSet(ModelViewSet):
                 status = 200
             )
             
-        except Exception as err:
-            return Response(error = '登録操作が失敗しました!', status=400)
+        except:
+            return Response(
+                {'error':'登録操作が失敗しました'}, status = 200
+            )
+        
+    @action(detail=False, methods=['POST'])
+    def update_item(self, request):
+        # Product
+        item = request.data['product']
+        ecsite = request.data['ecsite']
+        product = ()
+
+        try:
+            product = Product(
+                created_at = item['created_at'],
+                product_name = item['product_name'],
+                ec_site = ecsite,
+                purchase_url = item['purchase_url'],
+                ebay_url = item['ebay_url'],
+                purchase_price = item['purchase_price'],
+                sell_price_en = item['sell_price_en'],
+                profit = item['profit'],
+                profit_rate = item['profit_rate'],
+                prima = item['prima'],
+                shipping = item['shipping'],
+                quantity = item['quantity'],
+                created_by = item['created_by'],
+                notes = item['notes']
+            )
+            
+            product.save()
+
+            return Response(
+                {'Success!'},
+                status = 200
+            )
+            
+        except:
+            return Response(
+                {'error':'登録操作が失敗しました'}, status = 200
+            )
         
     @action(detail=False, methods=['GET'])  
     def get_results(self, request):
@@ -265,14 +261,16 @@ class ProductViewSet(ModelViewSet):
 
         perPageNum = request.GET.get('pageSize')
         page = request.GET.get('page')
-        user = request.GET.get('user')
+        creator = request.GET.get('user')
+        superuser = request.GET.get('superuser')
 
         orders_list = []
 
-        if user == '':
-            orders_list = OrderList.objects.all().order_by('id')
+        if creator == '':
+            if superuser == True:
+                orders_list = OrderList.objects.all().order_by('id')
         else:
-            orders_list = OrderList.objects.filter(created_by=user).order_by('id')
+            orders_list = OrderList.objects.filter(created_by = creator).order_by('id')
 
         paginator = Paginator(orders_list, perPageNum)
 
@@ -319,8 +317,10 @@ class ProductViewSet(ModelViewSet):
                 status=200
             )
             
-        except Exception as err:
-            return Response(error='オーダー商品登録作業が失敗しました！', status=400)
+        except:
+            return Response(
+                {'error':'オーダー商品登録作業が失敗しました！'}, status = 200
+            )
 
     @action(detail=False, methods=['GET'])  
     def get_deleted_items(self, request):

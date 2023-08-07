@@ -8,7 +8,7 @@ import time
 import datetime
 import json
 
-# from django.conf import settings
+from django.conf import settings
 from utils.convertcurrency import convert
 from product.scrape.engineselector import select_engine
 
@@ -37,8 +37,7 @@ def scrape_data(url):
         engine = engine()
         try:
             data = engine.scrape_data(source_url = url)
-
-            data['price_en'] = convert('JPY', 'USD', data['purchase_price'])
+            # data['price_en'] = convert('JPY', 'USD', data['purchase_price'])
 
         except Exception as err:
             raise err
@@ -52,18 +51,47 @@ def scrape_data(url):
     
 #     return True
 
+def revise_item(params, ebay_setting, item_number):
+    app_id = ''
+    dev_id = ''
+    cert_id = ''
+    token = ''  
+    
+    try:
+        # Set up the API connection
+        api = Connection(appid=app_id, devid=dev_id, certid=cert_id, token=ebay_token, config_file=None)
+        item = {
+            'Item': {
+                'ItemID': item_number,
+                # 'StartPrice': product.price_en,
+                'Quantity': 0
+            }
+        }
+        api.execute('ReviseItem', item)
+
+        print('ok')
+        # return Response(
+        #     data='Success',
+        #     status=200
+        # )
+
+    except Exception as err:
+        print('error!')
+
 def send_mail():
 
     return True
             
 
 def main():
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'productmanage.settings')
+
     setting = {}
+    ebay_setting = {}
+    params = config()
 
     with open(file=str('utils/settings_attrs.txt'), mode='r', encoding='utf-8') as f:
         setting = json.loads(f.read())
-
-    # data = scrape_data('https://jp.mercari.com/item/m17585370719')
 
     varience = setting['variable_price']
 
@@ -74,8 +102,6 @@ def main():
         conn = None
 
         try:
-            params = config()
-
             conn = psycopg2.connect(
                 database = params['db_name'],
                 host = params['host'],
@@ -122,8 +148,7 @@ def main():
             
         # monitering variable change and send mail
         # if abs(data['price_jp'] - item.price) > setting.variable_price:
-        #     send_mail()
-            
+        #     send_mail() 
                 
 
         time.sleep(600)

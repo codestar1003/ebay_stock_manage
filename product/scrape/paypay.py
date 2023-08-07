@@ -15,17 +15,13 @@ class ScrapingEngine:
         driver.implicitly_wait(5)
         dom = bs(driver.page_source, "html.parser")
         data = {}
-        isValid = True
 
         try:
             price = dom.find('span', attrs={'class': 'sc-f27eb67d-0 euzCBb ItemPrice__Component'}).text.replace(',', '')
             data['purchase_price'] = price.replace('円', '')
-        except:
-            isValid = False
-            data['nothing'] = True
-
-        if isValid:
             data['product_name'] = dom.find('span', attrs={'class': 'sc-5ea3dbc3-0 bdURdq'}).text
             data['nothing'] = False
-
+        except:
+            data['nothing'] = True
+            
         return data
