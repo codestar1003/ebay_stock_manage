@@ -43,40 +43,35 @@ def scrape_data(url):
             raise err
         
         return data
-            
-            
-# def update_data(id):
-#     pid = id
 
+def revise_item(ebay_url):
+    item_number = ''
+    ebay_setting = {}
+
+    if ebay_url == '':
+        return False
     
-#     return True
+    item_number = ebay_url.split("/", -1)
 
-def revise_item(params, ebay_setting, item_number):
-    app_id = ''
-    dev_id = ''
-    cert_id = ''
-    token = ''  
+    with open(file=str('utils/ebay_settings.txt'), mode='r', encoding='utf-8') as f:
+        ebay_setting = json.loads(f.read())
     
     try:
         # Set up the API connection
-        api = Connection(appid=app_id, devid=dev_id, certid=cert_id, token=ebay_token, config_file=None)
+        api = Connection(appid = ebay_setting['app_id'], devid = ebay_setting['dev_id'], certid = ebay_setting['cert_id'], token = ebay_setting['ebay_token'], config_file=None)
+
         item = {
             'Item': {
                 'ItemID': item_number,
-                # 'StartPrice': product.price_en,
                 'Quantity': 0
             }
         }
         api.execute('ReviseItem', item)
 
-        print('ok')
-        # return Response(
-        #     data='Success',
-        #     status=200
-        # )
-
-    except Exception as err:
-        print('error!')
+        return True
+    
+    except:
+        return False
 
 def send_mail():
 
@@ -87,7 +82,6 @@ def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'productmanage.settings')
 
     setting = {}
-    ebay_setting = {}
     params = config()
 
     with open(file=str('utils/settings_attrs.txt'), mode='r', encoding='utf-8') as f:
@@ -117,11 +111,12 @@ def main():
 
             for row in rows:
                 url = row[5]
+                ebay_url = row[6]
                 price = row[7]
 
                 if url == '':
                     continue
-
+                
                 data = scrape_data(url)
 
                 if data['nothing']:
@@ -133,6 +128,10 @@ def main():
                     # delete record
                     sql = "DELETE FROM product_product WHERE id='" + row[0] + "'" + row[0] + "'"
                     cur.execute(sql)
+
+                    # set ebay product quantity 0
+                    if ebay_url != '':
+                        revise_item(ebay_url)
 
                 # check variance change
                 if data['purchase_price'] > 0 and abs(data['purchase_price'] - price) > int(varience):

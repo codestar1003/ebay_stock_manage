@@ -8,3 +8,6 @@ def convert(from_currency, to_currency, amount):
     amount = round(amount * currencies[to_currency], 4) 
 
     return amount
+
+def getCurrentRate(currency):
+    return currencies[currency]

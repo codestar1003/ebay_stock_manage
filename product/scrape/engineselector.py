@@ -13,7 +13,7 @@ def select_engine(url):
         if site in url:
             result = site
             break
-
+        
     if result:
         module = import_module(f'product.scrape.{result}')
         engine = getattr(module, 'ScrapingEngine')

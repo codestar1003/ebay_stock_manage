@@ -155,7 +155,7 @@ class UserViewSet(ModelViewSet):
         
     @action(detail=False, methods=['POST'])
     def delete_user(self, request):
-        user_id = request['userid']
+        user_id = request.data['userid']
 
         try:
             User.objects.filter(id = user_id).delete()

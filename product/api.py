@@ -18,7 +18,7 @@ from ebaysdk.trading import Connection
 from .models import Product, DeletedList, OrderList
 from .serializers import ProductSerializer, DeletedListSerializer
 from product.scrape.engineselector import select_engine
-from utils.convertcurrency import convert
+from utils.convertcurrency import convert, getCurrentRate
 from utils.ebay_policy import DISPATCHTIMEMAX, RETURN_POLICY, SHIPPING_POLICY
 from .filterbackend import FilterBackend
 
@@ -54,29 +54,28 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def validate_product(self, request):
         info = request.data['product_info']
-        ecsite = info['ecsite']
+        # ecsite = info['ecsite']
         purchase_url = info['purchase_url']
         ebay_url = info['ebay_url']
-        itemID = info['item_id']
+        # itemID = info['item_id']
 
-        products = Product.objects.filter(purchase_url = purchase_url).values() | Product.objects.filter(ebay_url = ebay_url).values()
+        try:
+            # validate duplicate
+            products = Product.objects.filter(purchase_url = purchase_url).values() | Product.objects.filter(ebay_url = ebay_url).values()
 
-        # try:
-        #     # validate duplicate
-        #     products = Product.objects.filter(purchase_url = purchase_url).values() | Product.objects.filter(ebay_url = ebay_url).values()
-
-        # except Exception as err:
-        #     return Response(
-        #         {'error' : 'すでに存在しています！'}, status = 200
-        #     )
-
-
-        if len(products) > 0:
+        except Exception as err:
             return Response(
                 {'error' : 'すでに存在しています！'}, status = 200
             )
 
-        engine = select_engine(url = ecsite)
+
+        if len(products) > 0:
+            return Response(
+                data = 'すでに存在しています！',
+                status = 401
+            )
+
+        engine = select_engine(url = purchase_url)
         
         if engine:
             engine = engine()
@@ -93,13 +92,15 @@ class ProductViewSet(ModelViewSet):
                 
                 else:
                     return Response(
-                        {'error' : 'この商品は削除されました。'}, status = 200
+                        data = 'この商品は削除されました。',
+                        status = 401
                     )
             except Exception as err:
                 raise err
         else:
             return Response(
-                {'error':'入力したサイトへのサービスはまだサポートされていません。'}, status = 200
+                data = '入力したサイトへのサービスはまだサポートされていません。',
+                status = 401
             )
     
     @action(detail=False, methods=['POST'])
@@ -156,7 +157,7 @@ class ProductViewSet(ModelViewSet):
         products_list = []
 
         if creator == '':
-            if superuser == True:
+            if superuser == 'true':
                 products_list = Product.objects.all().order_by('id')
         else:
             products_list = Product.objects.filter(created_by = creator).order_by('id')
@@ -176,75 +177,71 @@ class ProductViewSet(ModelViewSet):
     def add_item(self, request):
         # Product
         item = request.data['product']
-        ecsite = request.data['ecsite']
+        mode = request.data['mode']
         product = ()
 
-        try:
-            product = Product(
-                created_at = item['created_at'],
-                product_name = item['product_name'],
-                ec_site = ecsite,
-                purchase_url = item['purchase_url'],
-                ebay_url = item['ebay_url'],
-                purchase_price = item['purchase_price'],
-                sell_price_en = item['sell_price_en'],
-                profit = item['profit'],
-                profit_rate = item['profit_rate'],
-                prima = item['prima'],
-                shipping = item['shipping'],
-                quantity = item['quantity'],
-                created_by = item['created_by'],
-                notes = item['notes']
-            )
-            
-            product.save()
+        if mode == 1:
+            try:
+                product = Product(
+                    created_at = item['created_at'],
+                    product_name = item['product_name'],
+                    ec_site = item['ec_site'],
+                    purchase_url = item['purchase_url'],
+                    ebay_url = item['ebay_url'],
+                    purchase_price = item['purchase_price'],
+                    sell_price_en = item['sell_price_en'],
+                    profit = item['profit'],
+                    profit_rate = item['profit_rate'],
+                    prima = item['prima'],
+                    shipping = item['shipping'],
+                    quantity = item['quantity'],
+                    created_by = item['created_by'],
+                    notes = item['notes']
+                )
+                
+                product.save()
 
-            return Response(
-                {'Success!'},
-                status = 200
-            )
-            
-        except:
-            return Response(
-                {'error':'登録操作が失敗しました'}, status = 200
-            )
-        
-    @action(detail=False, methods=['POST'])
-    def update_item(self, request):
-        # Product
-        item = request.data['product']
-        ecsite = request.data['ecsite']
-        product = ()
+                return Response(
+                    {'Success!'},
+                    status = 200
+                )
+                
+            except:
+                return Response(
+                    data = '登録操作が失敗しました',
+                    status = 401
+                )
+        else:
+            try:
+                pid = item['id']
+                user = Product.objects.filter(id = pid)
+                user.update(
+                    created_at = item['created_at'],
+                    product_name = item['product_name'],
+                    ec_site = item['ec_site'],
+                    purchase_url = item['purchase_url'],
+                    ebay_url = item['ebay_url'],
+                    purchase_price = item['purchase_price'],
+                    sell_price_en = item['sell_price_en'],
+                    profit = item['profit'],
+                    profit_rate = item['profit_rate'],
+                    prima = item['prima'],
+                    shipping = item['shipping'],
+                    quantity = item['quantity'],
+                    created_by = item['created_by'],
+                    notes = item['notes']
+                )
 
-        try:
-            product = Product(
-                created_at = item['created_at'],
-                product_name = item['product_name'],
-                ec_site = ecsite,
-                purchase_url = item['purchase_url'],
-                ebay_url = item['ebay_url'],
-                purchase_price = item['purchase_price'],
-                sell_price_en = item['sell_price_en'],
-                profit = item['profit'],
-                profit_rate = item['profit_rate'],
-                prima = item['prima'],
-                shipping = item['shipping'],
-                quantity = item['quantity'],
-                created_by = item['created_by'],
-                notes = item['notes']
-            )
-            
-            product.save()
-
-            return Response(
-                {'Success!'},
-                status = 200
-            )
-            
-        except:
-            return Response(
-                {'error':'登録操作が失敗しました'}, status = 200
-            )
+                return Response(
+                    {'Success!'},
+                    status = 200
+                )
+                
+            except:
+                return Response(
+                    data = '編集操作が失敗しました！',
+                    status = 401
+                )
         
     @action(detail=False, methods=['GET'])  
     def get_results(self, request):
@@ -261,13 +258,13 @@ class ProductViewSet(ModelViewSet):
 
         perPageNum = request.GET.get('pageSize')
         page = request.GET.get('page')
-        creator = request.GET.get('user')
+        creator = request.GET.get('created_by')
         superuser = request.GET.get('superuser')
 
         orders_list = []
 
         if creator == '':
-            if superuser == True:
+            if superuser == 'true':
                 orders_list = OrderList.objects.all().order_by('id')
         else:
             orders_list = OrderList.objects.filter(created_by = creator).order_by('id')
@@ -287,40 +284,79 @@ class ProductViewSet(ModelViewSet):
     def add_order_item(self, request):
         # Product
         item = request.data['order']
+        mode = request.data['mode']
 
         order = ()
 
-        try:
-            order = OrderList(
-                created_at=item['created_at'],
-                product_name=item['product_name'],
-                ec_site=item['ec_site'],
-                purchase_url=item['purchase_url'],
-                ebay_url=item['ebay_url'],
-                purchase_price=item['purchase_price'],
-                sell_price_en=item['sell_price_en'],
-                profit=item['profit'],
-                profit_rate=item['profit_rate'],
-                prima=item['prima'],
-                shipping=item['shipping'],
-                quantity=item['quantity'],
-                order_num=item['order_num'],
-                ordered_at=item['ordered_at'],
-                created_by=item['created_by'],
-                notes=item['notes']
-            )
-            
-            order.save()
+        if mode == 1:
+            try:
+                order = OrderList(
+                    created_at=item['created_at'],
+                    product_name=item['product_name'],
+                    ec_site=item['ec_site'],
+                    purchase_url=item['purchase_url'],
+                    ebay_url=item['ebay_url'],
+                    purchase_price=item['purchase_price'],
+                    sell_price_en=item['sell_price_en'],
+                    profit=item['profit'],
+                    profit_rate=item['profit_rate'],
+                    prima=item['prima'],
+                    shipping=item['shipping'],
+                    quantity=item['quantity'],
+                    order_num=item['order_num'],
+                    ordered_at=item['ordered_at'],
+                    created_by=item['created_by'],
+                    notes=item['notes']
+                )
+                
+                order.save()
 
-            return Response(
-                {'Success!'},
-                status=200
-            )
+                return Response(
+                    {'Success!'},
+                    status=200
+                )
             
-        except:
-            return Response(
-                {'error':'オーダー商品登録作業が失敗しました！'}, status = 200
-            )
+            except:
+                return Response(
+                    {'error':'オーダー商品登録作業が失敗しました！'}, status = 200
+                )
+        else:
+            try:
+                pid = item['id']
+                order = OrderList.objects.filter(id = pid)
+
+                order.update(
+                    created_at=item['created_at'],
+                    product_name=item['product_name'],
+                    ec_site=item['ec_site'],
+                    purchase_url=item['purchase_url'],
+                    ebay_url=item['ebay_url'],
+                    purchase_price=item['purchase_price'],
+                    sell_price_en=item['sell_price_en'],
+                    profit=item['profit'],
+                    profit_rate=item['profit_rate'],
+                    prima=item['prima'],
+                    shipping=item['shipping'],
+                    quantity=item['quantity'],
+                    order_num=item['order_num'],
+                    ordered_at=item['ordered_at'],
+                    created_by=item['created_by'],
+                    notes=item['notes']
+                )
+                
+                order.save()
+
+                return Response(
+                    {'Success!'},
+                    status=200
+                )
+            
+            except:
+                return Response(
+                    {'error':'オーダー商品登録作業が失敗しました！'}, status = 401
+                )
+
+        
 
     @action(detail=False, methods=['GET'])  
     def get_deleted_items(self, request):
@@ -342,8 +378,8 @@ class ProductViewSet(ModelViewSet):
         return Response({'count': paginator.count, 'deleted_items': deletes.values()}, status=200)
     
     @action(detail=False, methods=['POST'])  
-    def delelet_product(self, id):
-        pid = id
+    def delelet_product(self, request):
+        pid = request.data['id']
         item = Product.objects.get(id=pid)
 
         delete_item = ()
@@ -374,11 +410,26 @@ class ProductViewSet(ModelViewSet):
             delete_item.save()
             item.delete()
 
-            return True
+            return Response(data='success!', status=200)
         except:
-            return False
+            return Response(
+                data = '削除操作が失敗しました！',
+                status = 401
+            )
 
-        return Response(data='success!', status=200)
+    @action(detail=False, methods=['POST'])  
+    def delete_order_item(self, request):
+        pid = request.data['id']
+
+        try:
+            OrderList.objects.get(id = pid).delete()
+
+            return Response(data='success!', status=200)
+        except:
+            return Response(
+                data = '削除操作が失敗しました！',
+                status = 401
+            )
     
     @action(detail=False, methods=['GET'])
     def shipping_fee(self, request):
@@ -394,15 +445,28 @@ class ProductViewSet(ModelViewSet):
     def settings_attr(self, request):
         with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='r', encoding='utf-8') as f:
             settings_attrs = f.read()
+
+        res = json.loads(settings_attrs)
+        rate = getCurrentRate('JPY')
+
+        if res['rate'] != rate:
+            res['rate'] = str(rate)
+
+            with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='w', encoding='utf-8') as f:
+                f.write(json.dumps(res, indent=4))
         
         return Response(
-            data=json.loads(settings_attrs),
-            status=200
+            data = res,
+            status = 200
         )
     
     @action(detail=False, methods=['POST'])
     def update_settings_attr(self, request):
         settings_attr = request.data['settings_attr']
+        st = settings_attr['mercari']
+
+        with open(file=str(settings.BASE_DIR / 'utils/1.txt'),  mode='w', encoding='utf-8') as f:
+            f.write(st)
         
         with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='w', encoding='utf-8') as f:
             f.write(json.dumps(settings_attr, indent=4))

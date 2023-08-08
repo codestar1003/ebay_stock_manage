@@ -4,5 +4,6 @@
     "oversea": "1.35",
     "payoneer": "2",
     "fedex": "20",
-    "rate": "138.7"
+    "rate": "142.34",
+    "mercari": ""
 }
