@@ -1,12 +1,20 @@
+# import json
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup as bs
+
+# from django.conf import settings
 
 from utils.converttext import convert_text
 
 
 class ScrapingEngine:
     def scrape_data(self, source_url):
+        # with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='r', encoding='utf-8') as f:
+        #     settings_attrs = f.read()
+
+        # res = json.loads(settings_attrs)
+
         resp = requests.get(
             url=source_url,
         )

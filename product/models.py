@@ -207,13 +207,16 @@ class OrderList(models.Model):
         return True
 
 class DeletedList(models.Model):
+
     created_at = models.CharField(
         _('created at'),
         max_length=30
     )
     updated_at = models.CharField(
         _('updated at'),
-        max_length=30
+        max_length=30,
+        null=True,
+        blank=True
     )
     product_name = models.CharField(
         _('product_name'),
@@ -277,8 +280,9 @@ class DeletedList(models.Model):
         _('quantity'),
         null=True
     )
-    notes = models.TextField(
+    notes = models.CharField(
         _('notes'),
+        max_length = 3000,
         null=True,
         blank=True
     )
@@ -287,8 +291,8 @@ class DeletedList(models.Model):
         max_length = 64
     )
     deleted_at = models.CharField(
-        _('ordered_at'),
-        max_length = 30
+        "deleted date",
+        max_length = 64
     )
 
     @authenticated_users
@@ -302,62 +306,3 @@ class DeletedList(models.Model):
     @authenticated_users
     def has_scrape_data_permission(request):
         return True
-
-class ProductPhoto(TimeStampModel):
-    product = models.ForeignKey(
-        "product.Product", null=True, blank=True, on_delete=models.SET_NULL
-    )
-    path = models.ImageField(
-        _('image file'),
-        upload_to="productphoto"
-    )
-    width = models.DecimalField(
-        _('width'),
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True
-    )
-    height = models.DecimalField(
-        _('height'),
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True
-    )
-
-    @authenticated_users
-    def has_read_permission(request):
-        return True
-
-    @authenticated_users
-    def has_write_permission(request):
-        return True
-
-
-class ProductDescription(TimeStampModel):
-    product = models.ForeignKey(
-        "product.Product", null=True, blank=True, on_delete=models.SET_NULL
-    )
-    title_jp = models.CharField(
-        _('title JP'),
-        max_length=250,
-        null=True,
-        blank=True
-    )
-    title_en = models.CharField(
-        _('title EN'),
-        max_length=250,
-        null=True,
-        blank=True
-    )
-    description_jp = models.TextField(
-        _('description JP'),
-        null=True,
-        blank=True
-    )
-    description_en = models.TextField(
-        _('description EN'),
-        null=True,
-        blank=True
-    )

@@ -1,13 +1,21 @@
 import time
+import json
 # from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+
+from django.conf import settings
 
 # from utils.converttext import convert_text
 
 
 class ScrapingEngine:
     def scrape_data(self, source_url):
+        with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='r', encoding='utf-8') as f:
+            settings_attrs = f.read()
+
+        res = json.loads(settings_attrs)
+    
         options = webdriver.ChromeOptions() 
         options.headless = True
         driver = webdriver.Chrome(options=options)
@@ -25,7 +33,9 @@ class ScrapingEngine:
 
             data['nothing'] = False
 
-            if product_date == '半年以上前':
+            print(res['mercari'])
+
+            if product_date.find(res['mercari']) != -1:
                 data['nothing'] = True
         except:
             data['nothing'] = True

@@ -1,26 +1,33 @@
-# import json
-# import requests
-
+import json
 # from django.conf import settings
 
-# from utils.category_fee import category_fee
+def profit_formula(sell_price:float, purchase_price:int, prima:float, shipping:float, setting_attr:json):
 
+    # with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='r', encoding='utf-8') as f:
+    #     setting_attr = f.read()
 
-# def profit_formula(sell_price:float, buy_price:int, currency:str, category_id:str, point:int, shipping_policy:str):
-#     url = 'https://api.exchangerate-api.com/v4/latest/USD'
-#     currencies = requests.get(url).json()['rates']
-#     rate = currencies[currency]
+    # setting_attr = json.loads(setting_attr)
 
-#     with open(file=str(settings.BASE_DIR / 'utils/shipping_fee.txt'),  mode='r', encoding='utf-8') as f:
-#         shipping_fee = f.read()
-#     shipping_fee = json.loads(shipping_fee)
+    purchase_price = purchase_price + prima
 
-#     with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='r', encoding='utf-8') as f:
-#         profit_attrs = f.read()
-#     profit_attrs = json.loads(profit_attrs)
-#     rate = rate*(1-float(profit_attrs['payoneer_fee'])/100)
+    fvf = 0
+    oversea = 0
+    payoneer = 0
+    fedex = 0
+    rate = setting_attr['rate']
 
-#     profit = int((sell_price*rate)-(0.3*rate)-(sell_price*float(category_fee[category_id])*rate*(1+float(profit_attrs['consumption_fee'])/100))-(sell_price*float(profit_attrs['oversea_fee'])/100*rate*(1+float(profit_attrs['consumption_fee'])/100))-(buy_price-point)-int(shipping_fee[shipping_policy])-int(profit_attrs['shipping_agency_fee']))
+    if setting_attr['fvf'] != 0:
+        fvf = setting_attr['fvf'] / 100
 
-#     return profit
-    
+    if setting_attr['oversea'] != 0:
+        oversea = setting_attr['oversea'] / 100
+
+    if setting_attr['payoneer'] != 0:
+        payoneer = setting_attr['payoneer'] / 100
+
+    if setting_attr['fedex'] != 0:
+        fedex = setting_attr['fedex'] / 100
+
+    profit = (sell_price - sell_price * fvf - sell_price * oversea) * (rate - rate * payoneer) - purchase_price - shipping - shipping * fedex
+
+    return profit
