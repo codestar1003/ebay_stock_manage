@@ -56,27 +56,27 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def validate_product(self, request):
         info = request.data['product_info']
-        # ecsite = info['ecsite']
         purchase_url = info['purchase_url']
         ebay_url = info['ebay_url']
-        # itemID = info['item_id']
+        mode = info['mode']
 
-        try:
-            # validate duplicate
-            products = Product.objects.filter(purchase_url = purchase_url).values() | Product.objects.filter(ebay_url = ebay_url).values()
+        if mode == 1:
+            try:
+                # validate duplicate
+                products = Product.objects.filter(purchase_url = purchase_url).values() | Product.objects.filter(ebay_url = ebay_url).values()
 
-        except Exception as err:
-            return Response(
-                data = 'すでに存在しています！',
-                status = 401
-            )
+            except Exception as err:
+                return Response(
+                    data = 'すでに存在しています！',
+                    status = 401
+                )
 
 
-        if len(products) > 0:
-            return Response(
-                data = 'すでに存在しています！',
-                status = 401
-            )
+            if len(products) > 0:
+                return Response(
+                    data = 'すでに存在しています！',
+                    status = 401
+                )
 
         engine = select_engine(url = purchase_url)
         
