@@ -1,12 +1,8 @@
 import time
 import json
-# from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-
 from django.conf import settings
-
-# from utils.converttext import convert_text
 
 
 class ScrapingEngine:
@@ -24,7 +20,6 @@ class ScrapingEngine:
 
         driver.implicitly_wait(5)
         data = {}
-        # dom = bs(driver.page_source, "html.parser")
 
         try:
             data['purchase_price'] = int(driver.find_element(By.XPATH, "//*[@id='item-info']/section[1]/section[1]/div/div/span[2]").text.replace(',', ''))
@@ -32,8 +27,6 @@ class ScrapingEngine:
             product_date = driver.find_element(By.XPATH, "//*[@id='item-info']/section[2]/p").text
 
             data['nothing'] = False
-
-            print(res['mercari'])
 
             if product_date.find(res['mercari']) != -1:
                 data['nothing'] = True

@@ -1,6 +1,12 @@
 import json
+import datetime
+import requests
+import urllib.parse
+import base64
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import make_password
 from django.db.models import Q
+from django.utils import timezone
 
 from django.conf import settings
 from rest_framework.authtoken.models import Token
@@ -13,6 +19,8 @@ from users.models import User
 from users.serializers import UserSerializer
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+from ebaysdk.trading import Connection
 
 
 class UserViewSet(ModelViewSet):
@@ -31,23 +39,33 @@ class UserViewSet(ModelViewSet):
     
     @action(detail=False, methods=['POST'])
     def register(self, request):
+        users = User.objects.all()
+        is_superuser = False
+
+        if len(users) == 0:
+            is_superuser = True
+
         user_exist = User.objects.filter(Q(email=request.data['email']) | Q(username=request.data['username'])).first()
 
         if not user_exist:
             serializer = self.serializer_class(data = request.data)
             
             if serializer.is_valid():
-                user = User.objects.create_user(**serializer.validated_data)
+                if is_superuser:
+                    User.objects.create_superuser(**serializer.validated_data, is_superuser = True, is_staff = True, is_active = True)
+                else:
+                    User.objects.create_user(**serializer.validated_data)
+
                 return Response(status=200)
             
             return Response(
-                data='入力した情報が正しくありません。',
-                status=400
+                data = '入力した情報が正しくありません。',
+                status = 400
             )
         else:
             return Response(
-                data='同じメールを持つユーザーが既に存在します。',
-                status=400
+                data = '同じメールを持つユーザーが既に存在します。',
+                status = 400
             )
     
     @action(detail=False, methods=['POST'])
@@ -94,46 +112,56 @@ class UserViewSet(ModelViewSet):
                 data='Success',
                 status=200
             )
+
+    @action(detail=False, methods=['POST'])
+    def update_email(self, request):
+        user_id = request.data['user_id']
+        email = request.data['email']
+
+        print(user_id, email)
+
+        try:
+            User.objects.filter(id = user_id).update(email = email)
+
+            return Response(
+                data = 'メールアドレスが変更されました！',
+                status = 200
+            )
+        except:
+            return Response(
+                data = '操作が失敗しました！',
+                status = 401
+            )
+        
+    @action(detail=False, methods=['POST'])
+    def update_password(self, request):
+        user_id = request.data['user_id']
+        psw = make_password(request.data['psw'])
+
+        try:
+            User.objects.filter(id = user_id).update(password = psw)
+
+            return Response(
+                data = 'パスワードが変更されました！',
+                status = 200
+            )
+        except:
+            return Response(
+                data = '操作が失敗しました！',
+                status = 401
+            )
         
     @action(detail=False, methods=['GET'])
     def get_userlist(self, request):
-        perPageNum = request.GET.get('pageSize')
-        page = request.GET.get('page')
-
-        user_list = []
-
         user_list = User.objects.filter(is_active = True, is_superuser = False).order_by('id').values('id', 'username', 'date_joined', 'email', 'is_active')
 
-        paginator = Paginator(user_list, perPageNum)
-
-        try:
-            users = paginator.page(page).object_list
-        except PageNotAnInteger:
-            users = paginator.page(1).object_list
-        except EmptyPage:
-            users = paginator.page(paginator.num_pages).object_list
-
-        return Response({'count': paginator.count, 'users': users.values()}, status = 200)
+        return Response(data = user_list.values(), status = 200)
     
     @action(detail=False, methods=['GET'])
     def get_deactive_userlist(self, request):
-        perPageNum = request.GET.get('pageSize')
-        page = request.GET.get('page')
+        user_list = User.objects.filter(is_active = False).order_by('-id').values('id', 'username', 'date_joined', 'email', 'is_active')
 
-        user_list = []
-
-        user_list = User.objects.filter(is_active = False).order_by('id').values('id', 'username', 'date_joined', 'email', 'is_active')
-
-        paginator = Paginator(user_list, perPageNum)
-
-        try:
-            users = paginator.page(page).object_list
-        except PageNotAnInteger:
-            users = paginator.page(1).object_list
-        except EmptyPage:
-            users = paginator.page(paginator.num_pages).object_list
-
-        return Response({'count': paginator.count, 'users': users.values()}, status = 200)
+        return Response(data = user_list.values(), status = 200)
         
     @action(detail=False, methods=['POST'])
     def allow_user(self, request):
@@ -172,17 +200,104 @@ class UserViewSet(ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def get_ebay_info(self, request):
-        serializer = self.serializer_class(request.user).data
+
+        ebay = User.objects.filter(is_superuser = True).values('app_id', 'dev_id', 'cert_id', 'ebay_token', 'token_expired').values()[0]
+        
+        token_expired = str(ebay['token_expired'])
+        formatted_date = datetime.datetime.strptime(token_expired, "%Y-%m-%d %H:%M:%S.%f")
+
+        if ebay['app_id'] == None or ebay['cert_id'] == None:
+            return Response(
+                data = "操作が失敗しました！",
+                status = 401
+            )
+
+        if formatted_date < datetime.datetime.now():
+            if ebay['app_id'] != "" and ebay['cert_id'] != "":
+                # Set up the API connection
+                authHeaderData = ebay['app_id'] + ':' + ebay['cert_id']
+                encodedAuthHeader = str(base64.b64encode(authHeaderData.encode()))
+
+                encodedAuthHeader = encodedAuthHeader.replace("b'", "")
+                encodedAuthHeader = encodedAuthHeader.replace("'", "")
+
+                headers = {
+                    "Content-Type" : "application/x-www-form-urlencoded", 
+                    "Authorization" : "Basic " + encodedAuthHeader
+                }
+
+                body= {
+                    "grant_type" : "client_credentials"
+                }
+
+                data = urllib.parse.urlencode(body)
+
+                tokenURL = "https://api.ebay.com/identity/v1/oauth2/token"
+
+                try:
+                    response = requests.post(tokenURL, headers=headers, data=body)
+                    result = response.json()
+                    expire_time = datetime.datetime.now() + datetime.timedelta(hours = 2)
+
+                    User.objects.filter(is_superuser = True).update(ebay_token = result['access_token'], token_expired = expire_time)
+
+                    data = {
+                        'app_id' : ebay['app_id'],
+                        'dev_id' : ebay['dev_id'],
+                        'cert_id' : ebay['cert_id'],
+                        'ebay_token' : result['access_token'],
+                        'token_expired' : datetime.datetime.now()
+                    }
+
+                    return Response(
+                        data = data,
+                        status = 200
+                    )
+                
+                except:
+                    return Response(
+                        data = "操作が失敗しました！",
+                        status = 401
+                    )
+
         data = {
-            'app_id': serializer['app_id'] or '',
-            'dev_id': serializer['dev_id'] or '',
-            'cert_id': serializer['cert_id'] or '',
-            'ebay_token': serializer['ebay_token'] or '',
+            'app_id': ebay['app_id'] or '',
+            'dev_id': ebay['dev_id'] or '',
+            'cert_id': ebay['cert_id'] or '',
+            'ebay_token': ebay['ebay_token'] or '',
+            'token_expired' : ebay['token_expired'] or ''
         }
+
         return Response(
-            data=data,
-            status=200
+            data = data,
+            status = 200
         )
+    
+    @action(detail=False, methods=['POST'])
+    def update_ebay_info(self, request):
+        ebay = request.data['ebay_info']
+
+        app_id = ebay['app_id']
+        dev_id = ebay['dev_id']
+        cert_id = ebay['cert_id']
+        ebay_token = ebay['ebay_token']
+        expire_time = datetime.datetime.now() + datetime.timedelta(hours = 2)
+
+        User.objects.filter(is_superuser = True).update(app_id = app_id, dev_id = dev_id, cert_id = cert_id, ebay_token = ebay_token, token_expired = expire_time)
+
+        data = {
+            'app_id' : app_id,
+            'dev_id' : dev_id,
+            'cert_id' : cert_id,
+            'ebay_token' : ebay_token,
+            'token_expired' : expire_time
+        }
+
+        return Response(
+            data = data,
+            status = 200
+        )
+
 
     @action(detail=False, methods=['POST'])
     def logout(self, request):

@@ -1,11 +1,11 @@
 {
-    "variable_price": "1000",
-    "fvf": "12",
-    "oversea": "1.35",
-    "payoneer": "2",
-    "fedex": "20",
-    "rate": "144.43",
-    "mercari": "1\u304b\u6708\u524d",
-    "auctions": "2\u30f6\u6708",
-    "paypay": "6\u30f6\u6708\u524d\u306b\u66f4\u65b0"
+    "email_address": "suyama.sample@outlook.com",
+    "psw": "AsdfQwer!234",
+    "variable_price": 1000,
+    "fvf": 12,
+    "oversea": 1.35,
+    "payoneer": 2,
+    "fedex": 20,
+    "rate": "145.33",
+    "mercari": "\u534a\u5e74\u4ee5\u4e0a\u524d"
 }

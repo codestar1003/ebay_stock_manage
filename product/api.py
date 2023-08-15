@@ -1,27 +1,27 @@
 import csv
 import json
 import datetime
-import requests
-import uuid
-import time
+# import requests
+# import uuid
+# import time
 import openpyxl
 
 from django.conf import settings
-from io import BytesIO
-from PIL import Image
+# from io import BytesIO
+# from PIL import Image
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.filters import SearchFilter
+# from rest_framework.filters import SearchFilter
 from dry_rest_permissions.generics import DRYPermissions
 
 from ebaysdk.trading import Connection
 from .models import Product, DeletedList, OrderList
 from .serializers import ProductSerializer
 from product.scrape.engineselector import select_engine
-from utils.convertcurrency import convert, getCurrentRate
-from utils.ebay_policy import DISPATCHTIMEMAX, RETURN_POLICY, SHIPPING_POLICY
-from .filterbackend import FilterBackend
+from utils.convertcurrency import getCurrentRate
+# from utils.ebay_policy import DISPATCHTIMEMAX, RETURN_POLICY, SHIPPING_POLICY
+# from .filterbackend import FilterBackend
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from utils.profit_formula import profit_formula
@@ -105,80 +105,30 @@ class ProductViewSet(ModelViewSet):
                 data = '入力したサイトへのサービスはまだサポートされていません。',
                 status = 401
             )
-    
-    @action(detail=False, methods=['POST'])
-    def get_item_specific(self, request):
-        item_number = request.data['item_number']
-
-        try:
-            # Set up the API connection
-            api = Connection(appid=request.user.app_id, devid=request.user.dev_id, certid=request.user.cert_id, token=request.user.ebay_token, config_file=None)
-            response = api.execute(
-                'GetItem',
-                {
-                    'ItemID': item_number,
-                    'IncludeItemSpecifics': 'True'
-                }
-            )
-            item_specifics = response.reply.Item.ItemSpecifics.NameValueList
-            required_specifics = []
-            optional_specifics = []
-            for item_specific in item_specifics:
-                if(getattr(item_specific, 'Name') == 'Brand' or getattr(item_specific, 'Name') == 'Type'):
-                    required_specifics.append(
-                        {
-                            'Name': item_specific.Name,
-                            'Value': item_specific.Value,
-                            'Condition': 'Required',
-                        }
-                    )
-                else:
-                    optional_specifics.append(
-                        {
-                            'Name': item_specific.Name,
-                            'Value': item_specific.Value,
-                            'Condition': 'Optional',
-                        }
-                    )
-            result = required_specifics + optional_specifics
-            return Response(
-                data = result,
-                status = 200
-            )
-        except Exception as err:
-            raise err
-    
         
     @action(detail=False, methods=['GET'])
     def get_products(self, request):
 
-        perPageNum = request.GET.get('pageSize')
-        page = request.GET.get('page')
+        # perPageNum = request.GET.get('pageSize')
+        # page = request.GET.get('page')
         creator = request.GET.get('created_by')
-        superuser = request.GET.get('superuser')
+        superuser = request.GET.get('is_superuser')
 
-        products_list = []
+        products = []
 
         if creator == '':
             if superuser == 'true':
-                products_list = Product.objects.all().order_by('-id')
+                products = Product.objects.all().order_by('-id')
         else:
-            products_list = Product.objects.filter(created_by = creator).order_by('-id')
+            products = Product.objects.filter(created_by = creator).order_by('-id')
 
-        paginator = Paginator(products_list, perPageNum)
-
-        try:
-            products = paginator.page(page).object_list
-        except PageNotAnInteger:
-            products = paginator.page(1).object_list
-        except EmptyPage:
-            products = paginator.page(paginator.num_pages).object_list
-
-        return Response({'count': paginator.count, 'products': products.values()}, status=200)
+        return Response(
+            data = products.values(),
+            status = 200
+        )
     
     @action(detail=False, methods=['POST'])
     def add_item(self, request):
-        # Product
         item = request.data['product']
         mode = request.data['mode']
         product = ()
@@ -390,58 +340,37 @@ class ProductViewSet(ModelViewSet):
         
     @action(detail=False, methods=['GET'])    
     def get_orders(self, request):
+        orders = OrderList.objects.all().order_by('-id')
 
-        perPageNum = request.GET.get('pageSize')
-        page = request.GET.get('page')
-        creator = request.GET.get('created_by')
-        superuser = request.GET.get('superuser')
-
-        orders_list = []
-
-        if creator == '':
-            if superuser == 'true':
-                orders_list = OrderList.objects.all().order_by('-id')
-        else:
-            orders_list = OrderList.objects.filter(created_by = creator).order_by('-id')
-
-        paginator = Paginator(orders_list, perPageNum)
-
-        try:
-            orders = paginator.page(page).object_list
-        except PageNotAnInteger:
-            orders = paginator.page(1).object_list
-        except EmptyPage:
-            orders = paginator.page(paginator.num_pages).object_list
-
-        return Response({'count': paginator.count, 'orders': orders.values()}, status=200)
+        return Response(
+            data = orders.values(),
+            status = 200
+        )
     
     @action(detail=False, methods=['POST'])
     def add_order_item(self, request):
-        # Product
         item = request.data['order']
         mode = request.data['mode']
-
-        order = ()
 
         if mode == 1:
             try:
                 order = OrderList(
-                    created_at=item['created_at'],
-                    product_name=item['product_name'],
-                    ec_site=item['ec_site'],
-                    purchase_url=item['purchase_url'],
-                    ebay_url=item['ebay_url'],
-                    purchase_price=item['purchase_price'],
-                    sell_price_en=item['sell_price_en'],
-                    profit=item['profit'],
-                    profit_rate=item['profit_rate'],
-                    prima=item['prima'],
-                    shipping=item['shipping'],
-                    quantity=item['quantity'],
-                    order_num=item['order_num'],
-                    ordered_at=item['ordered_at'],
-                    created_by=item['created_by'],
-                    notes=item['notes']
+                    created_at = item['created_at'],
+                    product_name = item['product_name'],
+                    ec_site = item['ec_site'],
+                    purchase_url = item['purchase_url'],
+                    ebay_url = item['ebay_url'],
+                    purchase_price = item['purchase_price'],
+                    sell_price_en = item['sell_price_en'],
+                    profit = item['profit'],
+                    profit_rate = item['profit_rate'],
+                    prima = item['prima'],
+                    shipping = item['shipping'],
+                    quantity = item['quantity'],
+                    order_num = item['order_num'],
+                    ordered_at = item['ordered_at'],
+                    created_by = item['created_by'],
+                    notes = item['notes']
                 )
                 
                 order.save()
@@ -462,22 +391,22 @@ class ProductViewSet(ModelViewSet):
                 order = OrderList.objects.filter(id = pid)
 
                 order.update(
-                    created_at=item['created_at'],
-                    product_name=item['product_name'],
-                    ec_site=item['ec_site'],
-                    purchase_url=item['purchase_url'],
-                    ebay_url=item['ebay_url'],
-                    purchase_price=item['purchase_price'],
-                    sell_price_en=item['sell_price_en'],
-                    profit=item['profit'],
-                    profit_rate=item['profit_rate'],
-                    prima=item['prima'],
-                    shipping=item['shipping'],
-                    quantity=item['quantity'],
-                    order_num=item['order_num'],
-                    ordered_at=item['ordered_at'],
-                    created_by=item['created_by'],
-                    notes=item['notes']
+                    created_at = item['created_at'],
+                    product_name = item['product_name'],
+                    ec_site = item['ec_site'],
+                    purchase_url = item['purchase_url'],
+                    ebay_url = item['ebay_url'],
+                    purchase_price = item['purchase_price'],
+                    sell_price_en = item['sell_price_en'],
+                    profit = item['profit'],
+                    profit_rate = item['profit_rate'],
+                    prima = item['prima'],
+                    shipping = item['shipping'],
+                    quantity = item['quantity'],
+                    order_num = item['order_num'],
+                    ordered_at = item['ordered_at'],
+                    created_by = item['created_by'],
+                    notes = item['notes']
                 )
 
                 return Response(
@@ -491,26 +420,29 @@ class ProductViewSet(ModelViewSet):
                     status = 401
                 )
 
-        
-
     @action(detail=False, methods=['GET'])  
     def get_deleted_items(self, request):
 
-        perPageNum = request.GET.get('pageSize')
-        page = request.GET.get('page')
+        # perPageNum = request.GET.get('pageSize')
+        # page = request.GET.get('page')
 
         deletes_list = DeletedList.objects.all().order_by('-id')
 
-        paginator = Paginator(deletes_list, perPageNum)
+        # paginator = Paginator(deletes_list, perPageNum)
 
-        try:
-            deletes = paginator.page(page).object_list
-        except PageNotAnInteger:
-            deletes = paginator.page(1).object_list
-        except EmptyPage:
-            deletes = paginator.page(paginator.num_pages).object_list
+        # try:
+        #     deletes = paginator.page(page).object_list
+        # except PageNotAnInteger:
+        #     deletes = paginator.page(1).object_list
+        # except EmptyPage:
+        #     deletes = paginator.page(paginator.num_pages).object_list
 
-        return Response({'count': paginator.count, 'deleted_items': deletes.values()}, status=200)
+        # return Response({'count': paginator.count, 'deleted_items': deletes.values()}, status=200)
+
+        return Response(
+            data = deletes_list.values(),
+            status = 200
+        )
     
     @action(detail=False, methods=['POST'])  
     def delete_product(self, request):
@@ -520,7 +452,6 @@ class ProductViewSet(ModelViewSet):
 
         try:
             date = datetime.datetime.now()
-
             del_item = ()
 
             del_item = DeletedList(
@@ -662,16 +593,7 @@ class ProductViewSet(ModelViewSet):
         )
     
     @action(detail=False, methods=['GET'])
-    def updateProductInfo(self, request):
-        products = Product.objects.all().order_by(id)
-
-        return Response(
-            data = True,
-            status = 200
-        )
-    
-    @action(detail=False, methods=['GET'])
-    def update_site(self, request):
+    def update_info(self, request):
         with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='r', encoding='utf-8') as f:
             settings_attrs = f.read()
 
@@ -683,15 +605,15 @@ class ProductViewSet(ModelViewSet):
             f.write(json.dumps(res, indent=4))
 
         # update profits
-        products = Product.objects.all().order_by(-id)
+        products = Product.objects.all().order_by('-id')
 
         for product in products:
-            sell_price = product.sell_price_en
+            sell_price = float(product.sell_price_en)
             purchase_price = product.purchase_price
             prima = product.prima
             shipping = product.shipping
 
-            profit = profit_formula(sell_price, purchase_price, prima, shipping, res)
+            profit = profit_formula(float(sell_price), int(purchase_price), float(prima), float(shipping), res)
             profit_rate = (profit / (sell_price * rate)) * 100
 
             Product.objects.filter(id = product.id).update(profit = profit, profit_rate = profit_rate)
@@ -701,5 +623,46 @@ class ProductViewSet(ModelViewSet):
             status = 200
         )
 
-        
+    @action(detail=False, methods=['POST'])
+    def get_item_specific(self, request):
+        item_number = request.data['item_number']
+
+        try:
+            # Set up the API connection
+            api = Connection(appid=request.user.app_id, devid=request.user.dev_id, certid=request.user.cert_id, token=request.user.ebay_token, config_file=None)
+            response = api.execute(
+                'GetItem',
+                {
+                    'ItemID': item_number,
+                    'IncludeItemSpecifics': 'True'
+                }
+            )
+            item_specifics = response.reply.Item.ItemSpecifics.NameValueList
+            required_specifics = []
+            optional_specifics = []
+            for item_specific in item_specifics:
+                if(getattr(item_specific, 'Name') == 'Brand' or getattr(item_specific, 'Name') == 'Type'):
+                    required_specifics.append(
+                        {
+                            'Name': item_specific.Name,
+                            'Value': item_specific.Value,
+                            'Condition': 'Required',
+                        }
+                    )
+                else:
+                    optional_specifics.append(
+                        {
+                            'Name': item_specific.Name,
+                            'Value': item_specific.Value,
+                            'Condition': 'Optional',
+                        }
+                    )
+            result = required_specifics + optional_specifics
+            return Response(
+                data = result,
+                status = 200
+            )
+        except Exception as err:
+            raise err
+
             

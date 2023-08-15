@@ -21,5 +21,6 @@ class UserSerializer(serializers.ModelSerializer):
             'app_id',
             'dev_id',
             'cert_id',
-            'ebay_token'
+            'ebay_token',
+            'token_expired'
         ]
