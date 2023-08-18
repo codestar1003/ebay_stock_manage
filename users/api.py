@@ -1,8 +1,4 @@
 import json
-import datetime
-import requests
-import urllib.parse
-import base64
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
@@ -17,11 +13,6 @@ from dry_rest_permissions.generics import DRYPermissions
 
 from users.models import User
 from users.serializers import UserSerializer
-
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-from ebaysdk.trading import Connection
-
 
 class UserViewSet(ModelViewSet):
     permission_classes = (DRYPermissions, )
@@ -70,10 +61,8 @@ class UserViewSet(ModelViewSet):
     
     @action(detail=False, methods=['POST'])
     def login(self, request):
-        # user = User.objects.filter(email=request.data['email']).first()
         user = authenticate(request=request, email=request.data['email'], password=request.data['password'])
 
-        # user = authenticate(request=request, username=request.data['username'], password=request.data['password'])
         if user:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
@@ -85,8 +74,8 @@ class UserViewSet(ModelViewSet):
 
             if data['user']['is_active'] == True:
                 return Response(
-                    data=data,
-                    status=200
+                    data = data,
+                    status = 200
                 )
             else:
                 return Response(
@@ -95,8 +84,8 @@ class UserViewSet(ModelViewSet):
                 )
         else:
             return Response(
-                data='メールやパスワードが正しくありません。',
-                status=401
+                data = 'メールやパスワードが正しくありません。',
+                status = 401
             )
 
     def update(self, request, *args, **kwargs):
@@ -117,8 +106,6 @@ class UserViewSet(ModelViewSet):
     def update_email(self, request):
         user_id = request.data['user_id']
         email = request.data['email']
-
-        print(user_id, email)
 
         try:
             User.objects.filter(id = user_id).update(email = email)
@@ -165,11 +152,20 @@ class UserViewSet(ModelViewSet):
         
     @action(detail=False, methods=['POST'])
     def allow_user(self, request):
+        super_id = request.data['super_id']
         user_id = request.data['user_id']
         allow = request.data['allow']
 
+        is_superuser = self.isSuperUser(super_id)
+
+        if is_superuser == False:
+            return Response(
+                data = '操作が失敗しました！',
+                status = 401
+            )
+
         try:
-            User.objects.filter(id = user_id).update(is_active=allow)
+            User.objects.filter(id = user_id).update(is_active = allow)
 
             return Response(
                 data = '操作に成功しました！',
@@ -183,7 +179,16 @@ class UserViewSet(ModelViewSet):
         
     @action(detail=False, methods=['POST'])
     def delete_user(self, request):
-        user_id = request.data['userid']
+        super_id = request.data['super_id']
+        user_id = request.data['user_id']
+
+        is_superuser = self.isSuperUser(super_id)
+
+        if is_superuser == False:
+            return Response(
+                data = 'ユーザー削除作業が失敗しました！',
+                status = 401
+            )
 
         try:
             User.objects.filter(id = user_id).delete()
@@ -201,96 +206,51 @@ class UserViewSet(ModelViewSet):
     @action(detail=False, methods=['GET'])
     def get_ebay_info(self, request):
 
-        ebay = User.objects.filter(is_superuser = True).values('app_id', 'dev_id', 'cert_id', 'ebay_token', 'token_expired').values()[0]
-        
-        token_expired = str(ebay['token_expired'])
-        formatted_date = datetime.datetime.strptime(token_expired, "%Y-%m-%d %H:%M:%S.%f")
+        try:
+            ebay = User.objects.filter(is_superuser = True).values('app_id', 'dev_id', 'cert_id', 'ebay_token').values()[0]
 
-        if ebay['app_id'] == None or ebay['cert_id'] == None:
+            data = {
+                'app_id': ebay['app_id'] or '',
+                'dev_id': ebay['dev_id'] or '',
+                'cert_id': ebay['cert_id'] or '',
+                'ebay_token': ebay['ebay_token'] or ''
+            }
+
+            return Response(
+                data = data,
+                status = 200
+            )
+        except:
+            return Response(
+                data = "操作が失敗しました！",
+                status = 401
+            )
+    
+    @action(detail=False, methods=['POST'])
+    def update_ebay_info(self, request):
+        ebay = request.data['ebayinfo']
+        super_id = request.data['super_id']
+
+        is_superuser = self.isSuperUser(super_id)
+
+        if is_superuser == False:
             return Response(
                 data = "操作が失敗しました！",
                 status = 401
             )
 
-        if formatted_date < datetime.datetime.now():
-            if ebay['app_id'] != "" and ebay['cert_id'] != "":
-                # Set up the API connection
-                authHeaderData = ebay['app_id'] + ':' + ebay['cert_id']
-                encodedAuthHeader = str(base64.b64encode(authHeaderData.encode()))
-
-                encodedAuthHeader = encodedAuthHeader.replace("b'", "")
-                encodedAuthHeader = encodedAuthHeader.replace("'", "")
-
-                headers = {
-                    "Content-Type" : "application/x-www-form-urlencoded", 
-                    "Authorization" : "Basic " + encodedAuthHeader
-                }
-
-                body= {
-                    "grant_type" : "client_credentials"
-                }
-
-                data = urllib.parse.urlencode(body)
-
-                tokenURL = "https://api.ebay.com/identity/v1/oauth2/token"
-
-                try:
-                    response = requests.post(tokenURL, headers=headers, data=body)
-                    result = response.json()
-                    expire_time = datetime.datetime.now() + datetime.timedelta(hours = 2)
-
-                    User.objects.filter(is_superuser = True).update(ebay_token = result['access_token'], token_expired = expire_time)
-
-                    data = {
-                        'app_id' : ebay['app_id'],
-                        'dev_id' : ebay['dev_id'],
-                        'cert_id' : ebay['cert_id'],
-                        'ebay_token' : result['access_token'],
-                        'token_expired' : datetime.datetime.now()
-                    }
-
-                    return Response(
-                        data = data,
-                        status = 200
-                    )
-                
-                except:
-                    return Response(
-                        data = "操作が失敗しました！",
-                        status = 401
-                    )
-
-        data = {
-            'app_id': ebay['app_id'] or '',
-            'dev_id': ebay['dev_id'] or '',
-            'cert_id': ebay['cert_id'] or '',
-            'ebay_token': ebay['ebay_token'] or '',
-            'token_expired' : ebay['token_expired'] or ''
-        }
-
-        return Response(
-            data = data,
-            status = 200
-        )
-    
-    @action(detail=False, methods=['POST'])
-    def update_ebay_info(self, request):
-        ebay = request.data['ebay_info']
-
         app_id = ebay['app_id']
         dev_id = ebay['dev_id']
         cert_id = ebay['cert_id']
         ebay_token = ebay['ebay_token']
-        expire_time = datetime.datetime.now() + datetime.timedelta(hours = 2)
 
-        User.objects.filter(is_superuser = True).update(app_id = app_id, dev_id = dev_id, cert_id = cert_id, ebay_token = ebay_token, token_expired = expire_time)
+        User.objects.filter(is_superuser = True).update(app_id = app_id, dev_id = dev_id, cert_id = cert_id, ebay_token = ebay_token)
 
         data = {
             'app_id' : app_id,
             'dev_id' : dev_id,
             'cert_id' : cert_id,
-            'ebay_token' : ebay_token,
-            'token_expired' : expire_time
+            'ebay_token' : ebay_token
         }
 
         return Response(
@@ -306,3 +266,8 @@ class UserViewSet(ModelViewSet):
             data='Success',
             status=200
         )
+    
+    def isSuperUser(self, user_id):
+        user = User.objects.filter(id = user_id).values()
+        return user[0]['is_superuser']
+

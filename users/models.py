@@ -5,17 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from dry_rest_permissions.generics import authenticated_users
 
 
-class User(AbstractUser):
-    is_superuser = models.BooleanField(default=False)
-    
-    username = models.CharField(max_length=30)
-    
-    email = models.EmailField(max_length=250)
-    
-    is_staff = models.BooleanField(default=False)
-    
-    is_active = models.BooleanField(default=False)
-    
+class User(AbstractUser):    
     app_id = models.CharField(
         _('app Id'),
         max_length=255,
@@ -43,13 +33,6 @@ class User(AbstractUser):
         null=True,
         blank=True
     )
-
-    token_expired = models.DateTimeField(
-        verbose_name=_("Creation date"),
-        auto_now_add=True,
-        null=True
-    )
-
     
     def has_read_permission(request):
         return True

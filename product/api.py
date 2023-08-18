@@ -1,18 +1,12 @@
 import csv
 import json
 import datetime
-# import requests
-# import uuid
-# import time
 import openpyxl
 
 from django.conf import settings
-# from io import BytesIO
-# from PIL import Image
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-# from rest_framework.filters import SearchFilter
 from dry_rest_permissions.generics import DRYPermissions
 
 from ebaysdk.trading import Connection
@@ -20,10 +14,7 @@ from .models import Product, DeletedList, OrderList
 from .serializers import ProductSerializer
 from product.scrape.engineselector import select_engine
 from utils.convertcurrency import getCurrentRate
-# from utils.ebay_policy import DISPATCHTIMEMAX, RETURN_POLICY, SHIPPING_POLICY
-# from .filterbackend import FilterBackend
-
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from users.models import User
 from utils.profit_formula import profit_formula
 
 class ProductViewSet(ModelViewSet):
@@ -71,7 +62,6 @@ class ProductViewSet(ModelViewSet):
                     status = 401
                 )
 
-
             if len(products) > 0:
                 return Response(
                     data = 'すでに存在しています！',
@@ -86,7 +76,6 @@ class ProductViewSet(ModelViewSet):
                 data = engine.scrape_data(source_url = purchase_url)
 
                 if data['nothing'] == False:
-                    # data['sell_price_en'] = convert('JPY', 'USD', data['purchase_price'])
 
                     return Response(
                         data = data,
@@ -98,8 +87,11 @@ class ProductViewSet(ModelViewSet):
                         data = 'この商品は削除されました。',
                         status = 401
                     )
-            except Exception as err:
-                raise err
+            except:
+                return Response(
+                    data = '入力したサイトへのサービスはまだサポートされていません。',
+                    status = 401
+                )
         else:
             return Response(
                 data = '入力したサイトへのサービスはまだサポートされていません。',
@@ -108,22 +100,20 @@ class ProductViewSet(ModelViewSet):
         
     @action(detail=False, methods=['GET'])
     def get_products(self, request):
-
-        # perPageNum = request.GET.get('pageSize')
-        # page = request.GET.get('page')
         creator = request.GET.get('created_by')
-        superuser = request.GET.get('is_superuser')
+        user_id = request.GET.get('user_id')
+        superuser = self.isSuperUser(user_id)
 
         products = []
 
         if creator == '':
-            if superuser == 'true':
-                products = Product.objects.all().order_by('-id')
+            if superuser == True:
+                products = Product.objects.select_related('created_by').order_by('-id').values('created_by__username', 'id', 'created_at', 'product_name', 'ec_site', 'purchase_url', 'ebay_url', 'purchase_price', 'sell_price_en', 'profit', 'profit_rate', 'prima', 'shipping', 'notes', 'created_by_id')
         else:
-            products = Product.objects.filter(created_by = creator).order_by('-id')
+            products = Product.objects.filter(created_by = creator).select_related('created_by').order_by('-id').values('created_by__username', 'id', 'created_at', 'product_name', 'ec_site', 'purchase_url', 'ebay_url', 'purchase_price', 'sell_price_en', 'profit', 'profit_rate', 'prima', 'shipping', 'notes', 'created_by_id')
 
         return Response(
-            data = products.values(),
+            data = products,
             status = 200
         )
     
@@ -131,7 +121,6 @@ class ProductViewSet(ModelViewSet):
     def add_item(self, request):
         item = request.data['product']
         mode = request.data['mode']
-        product = ()
 
         if mode == 1:
             try:
@@ -147,8 +136,8 @@ class ProductViewSet(ModelViewSet):
                     profit_rate = item['profit_rate'],
                     prima = item['prima'],
                     shipping = item['shipping'],
-                    quantity = item['quantity'],
-                    created_by = item['created_by'],
+                    # quantity = item['quantity'],
+                    created_by = request.user,
                     notes = item['notes']
                 )
                 
@@ -167,8 +156,9 @@ class ProductViewSet(ModelViewSet):
         else:
             try:
                 pid = item['id']
-                user = Product.objects.filter(id = pid)
-                user.update(
+
+                product = Product.objects.filter(id = pid)
+                product.update(
                     created_at = item['created_at'],
                     product_name = item['product_name'],
                     ec_site = item['ec_site'],
@@ -180,8 +170,6 @@ class ProductViewSet(ModelViewSet):
                     profit_rate = item['profit_rate'],
                     prima = item['prima'],
                     shipping = item['shipping'],
-                    quantity = item['quantity'],
-                    created_by = item['created_by'],
                     notes = item['notes']
                 )
 
@@ -201,14 +189,17 @@ class ProductViewSet(ModelViewSet):
 
         worker = request.GET.get('worker')
         month = request.GET.get('month')
-        results = Product.objects.filter(created_by = worker, created_at__startswith = month).order_by('-id').values('id', 'created_at', 'created_by')
 
-        return Response({'results': results}, status = 200)
+        if worker != "": 
+            results = Product.objects.filter(created_by = worker, created_at__startswith = month).order_by('-id').values('id', 'created_at', 'created_by')
+            return Response(data = results, status = 200)
+        else:
+            return Response(data = "", status = 200)
+
 
     @action(detail=False, methods=['POST'])
     def upload_product_file(self, request):
         file = request.FILES['csvFile']
-        user = request.data['user']
 
         date = str(datetime.datetime.now()).split(" ")[0]
 
@@ -260,7 +251,7 @@ class ProductViewSet(ModelViewSet):
                 prima = prima,
                 shipping = shipping,
                 quantity = 0,
-                created_by = user,
+                created_by = request.user,
                 notes = wproductsInfo.cell(row=i+1, column=12).value
             )
 
@@ -274,7 +265,6 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def upload_order_file(self, request):
         file = request.FILES['csvFile']
-        user = request.data['user']
 
         date = str(datetime.datetime.now()).split(" ")[0]
 
@@ -326,7 +316,7 @@ class ProductViewSet(ModelViewSet):
                 prima = prima,
                 shipping = shipping,
                 quantity = 0,
-                created_by = user,
+                created_by = request.user,
                 notes = wproductsInfo.cell(row=i+1, column=12).value
             )
 
@@ -340,7 +330,7 @@ class ProductViewSet(ModelViewSet):
         
     @action(detail=False, methods=['GET'])    
     def get_orders(self, request):
-        orders = OrderList.objects.all().order_by('-id')
+        orders = OrderList.objects.select_related('created_by').order_by('-id').values('created_by__username', 'id', 'created_at', 'product_name', 'ec_site', 'purchase_url', 'ebay_url', 'purchase_price', 'sell_price_en', 'profit', 'profit_rate', 'prima', 'shipping', 'order_num', 'notes', 'created_by_id')
 
         return Response(
             data = orders.values(),
@@ -369,7 +359,7 @@ class ProductViewSet(ModelViewSet):
                     quantity = item['quantity'],
                     order_num = item['order_num'],
                     ordered_at = item['ordered_at'],
-                    created_by = item['created_by'],
+                    created_by = request.user,
                     notes = item['notes']
                 )
                 
@@ -405,7 +395,6 @@ class ProductViewSet(ModelViewSet):
                     quantity = item['quantity'],
                     order_num = item['order_num'],
                     ordered_at = item['ordered_at'],
-                    created_by = item['created_by'],
                     notes = item['notes']
                 )
 
@@ -423,24 +412,10 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['GET'])  
     def get_deleted_items(self, request):
 
-        # perPageNum = request.GET.get('pageSize')
-        # page = request.GET.get('page')
-
-        deletes_list = DeletedList.objects.all().order_by('-id')
-
-        # paginator = Paginator(deletes_list, perPageNum)
-
-        # try:
-        #     deletes = paginator.page(page).object_list
-        # except PageNotAnInteger:
-        #     deletes = paginator.page(1).object_list
-        # except EmptyPage:
-        #     deletes = paginator.page(paginator.num_pages).object_list
-
-        # return Response({'count': paginator.count, 'deleted_items': deletes.values()}, status=200)
+        deletes_list = DeletedList.objects.select_related('created_by').order_by('-id').values('created_by__username', 'id', 'created_at', 'product_name', 'ec_site', 'purchase_url', 'ebay_url', 'purchase_price', 'sell_price_en', 'profit', 'profit_rate', 'prima', 'shipping', 'notes', 'deleted_at', 'created_by_id')
 
         return Response(
-            data = deletes_list.values(),
+            data = deletes_list,
             status = 200
         )
     
@@ -520,8 +495,6 @@ class ProductViewSet(ModelViewSet):
 
         with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='w', encoding='utf-8') as f:
             f.write(json.dumps(res, indent=4))
-
-        # self.updateProductInfo()
         
         return Response(
             data = res,
@@ -531,8 +504,6 @@ class ProductViewSet(ModelViewSet):
     @action(detail=False, methods=['POST'])
     def update_settings_attr(self, request):
         settings_attr = request.data['settings_attr']
-
-        # st = json.dumps(settings_attr, indent=4)
 
         with open(file=str(settings.BASE_DIR / 'utils/settings_attrs.txt'),  mode='w', encoding='utf-8') as f:
             f.write(json.dumps(settings_attr, ensure_ascii=False, indent=4))
@@ -664,5 +635,9 @@ class ProductViewSet(ModelViewSet):
             )
         except Exception as err:
             raise err
+        
+    def isSuperUser(self, user_id):
+        user = User.objects.filter(id = user_id).values()
+        return user[0]['is_superuser']
 
             

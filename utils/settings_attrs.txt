@@ -1,11 +1,11 @@
 {
-    "email_address": "suyama.sample@outlook.com",
-    "psw": "AsdfQwer!234",
+    "email_address": "hanslee1003@outlook.com",
+    "psw": "Hco!998227$03",
     "variable_price": 1000,
     "fvf": 12,
     "oversea": 1.35,
     "payoneer": 2,
     "fedex": 20,
-    "rate": "145.33",
+    "rate": "145.88",
     "mercari": "\u534a\u5e74\u4ee5\u4e0a\u524d"
 }

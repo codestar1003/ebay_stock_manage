@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 
 from dry_rest_permissions.generics import authenticated_users
 
-from utils.models import TimeStampModel
 
 class Product(models.Model):
 
@@ -82,12 +81,14 @@ class Product(models.Model):
     notes = models.CharField(
         _('notes'),
         max_length = 3000,
-        null=True,
-        blank=True
+        null = True,
+        blank = True
     )
-    created_by = models.CharField(
-        "users.user",
-        max_length = 64
+    created_by = models.ForeignKey(
+        "users.User", 
+        null = True,
+        blank=True,
+        on_delete = models.SET_NULL
     )
 
     @authenticated_users
@@ -189,9 +190,11 @@ class OrderList(models.Model):
         null=True,
         blank=True
     )
-    created_by = models.CharField(
-        "users.user",
-        max_length = 64
+    created_by = models.ForeignKey(
+        "users.User",
+        null=True,
+        blank=True,
+        on_delete = models.CASCADE
     )
 
     @authenticated_users
@@ -286,9 +289,11 @@ class DeletedList(models.Model):
         null=True,
         blank=True
     )
-    created_by = models.CharField(
-        "users.user",
-        max_length = 64
+    created_by = models.ForeignKey(
+        "users.User",
+        null=True,
+        blank=True,
+        on_delete = models.CASCADE
     )
     deleted_at = models.CharField(
         "deleted date",
@@ -306,3 +311,10 @@ class DeletedList(models.Model):
     @authenticated_users
     def has_scrape_data_permission(request):
         return True
+    
+class MailList(models.Model):
+
+    product_id = models.CharField(
+        _('product id'),
+        max_length=64
+    )

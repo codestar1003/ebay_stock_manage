@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, DeletedList
+from .models import Product, OrderList, DeletedList, MailList
 
 class ProductSerializer(serializers.ModelSerializer):
 
@@ -11,7 +11,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class OrderListSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = DeletedList
+        model = OrderList
         fields = "__all__"
         depth = 1
 
@@ -19,5 +19,12 @@ class DeletedListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DeletedList
+        fields = "__all__"
+        depth = 1
+
+class MailListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MailList
         fields = "__all__"
         depth = 1

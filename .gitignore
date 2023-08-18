@@ -1,5 +1,4 @@
 *media/
-*product/migrations
 *.env
 variable_pricetxt
 profit_attrs.txt
