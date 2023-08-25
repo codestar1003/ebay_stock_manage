@@ -7,5 +7,6 @@
     "payoneer": 2,
     "fedex": 20,
     "rate": "145.88",
-    "mercari": "\u534a\u5e74\u4ee5\u4e0a\u524d"
+    "mercari": "1\u304b\u6708\u524d",
+    "paypay": "5\u30f6\u6708\u524d\u306b\u66f4\u65b0"
 }

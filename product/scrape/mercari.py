@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from django.conf import settings
 
+from utils.outdate import MERCARI
 
 class ScrapingEngine:
     def scrape_data(self, source_url):
@@ -28,8 +29,12 @@ class ScrapingEngine:
 
             data['nothing'] = False
 
-            if product_date.find(res['mercari']) != -1:
+            index = MERCARI.get(res['mercari'])
+            cindex = MERCARI.get(product_date)
+
+            if cindex != None and index <= cindex:
                 data['nothing'] = True
+
         except:
             data['nothing'] = True
 

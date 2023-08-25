@@ -5,7 +5,6 @@ from dry_rest_permissions.generics import authenticated_users
 
 
 class Product(models.Model):
-
     created_at = models.CharField(
         _('created at'),
         max_length=30

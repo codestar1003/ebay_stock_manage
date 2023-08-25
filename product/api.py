@@ -21,7 +21,7 @@ class ProductViewSet(ModelViewSet):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
     permission_classes = (DRYPermissions, )
-
+    
     @action(detail=False, methods=['POST'])
     def scrape_data(self, request):
         url = request.data['url']
@@ -76,12 +76,10 @@ class ProductViewSet(ModelViewSet):
                 data = engine.scrape_data(source_url = purchase_url)
 
                 if data['nothing'] == False:
-
                     return Response(
                         data = data,
                         status = 200
                     )
-                
                 else:
                     return Response(
                         data = 'この商品は削除されました。',
@@ -333,7 +331,7 @@ class ProductViewSet(ModelViewSet):
         orders = OrderList.objects.select_related('created_by').order_by('-id').values('created_by__username', 'id', 'created_at', 'product_name', 'ec_site', 'purchase_url', 'ebay_url', 'purchase_price', 'sell_price_en', 'profit', 'profit_rate', 'prima', 'shipping', 'order_num', 'notes', 'created_by_id')
 
         return Response(
-            data = orders.values(),
+            data = orders,
             status = 200
         )
     
@@ -578,16 +576,17 @@ class ProductViewSet(ModelViewSet):
         # update profits
         products = Product.objects.all().order_by('-id')
 
-        for product in products:
-            sell_price = float(product.sell_price_en)
-            purchase_price = product.purchase_price
-            prima = product.prima
-            shipping = product.shipping
+        if products != None:
+            for product in products:
+                sell_price = float(product.sell_price_en)
+                purchase_price = product.purchase_price
+                prima = product.prima
+                shipping = product.shipping
 
-            profit = profit_formula(float(sell_price), int(purchase_price), float(prima), float(shipping), res)
-            profit_rate = (profit / (sell_price * rate)) * 100
+                profit = profit_formula(float(sell_price), int(purchase_price), float(prima), float(shipping), res)
+                profit_rate = (profit / (sell_price * rate)) * 100
 
-            Product.objects.filter(id = product.id).update(profit = profit, profit_rate = profit_rate)
+                Product.objects.filter(id = product.id).update(profit = profit, profit_rate = profit_rate)
         
         return Response(
             data = res,
@@ -637,7 +636,10 @@ class ProductViewSet(ModelViewSet):
             raise err
         
     def isSuperUser(self, user_id):
+        User.objects.all()
         user = User.objects.filter(id = user_id).values()
         return user[0]['is_superuser']
+    
+
 
             

@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from utils.converttext import convert_text
+from utils.outdate import PAYPAY
 
 
 class ScrapingEngine:
@@ -29,9 +30,12 @@ class ScrapingEngine:
             data['nothing'] = False
 
             date = dom.find('span', attrs={'class': 'sc-5ea3dbc3-0 dguVSe'}).text
+            
+            index = PAYPAY.get(res['paypay'])
+            cindex = PAYPAY.get(date)
 
-            if date != None and date.find(res['paypay']) != -1:
-                data['nothing'] = False
+            if cindex != None and cindex >= index:
+                data['nothing'] = True
 
         except:
             data['nothing'] = True
